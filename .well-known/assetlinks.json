@@ -1,0 +1,25 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.wuba.wbvideoandroidapp",
+    "sha256_cert_fingerprints":
+    ["47:01:C2:8F:08:19:87:E9:74:C4:6C:72:E1:79:FF:22:32:03:19:C8:6C:28:83:0D:57:69:52:32:0E:16:ED:30"]
+  }
+},
+{
+  "relation": ["delegate_permission/common.get_login_creds"],
+  "target": {
+    "namespace": "web",
+    "site": "https://zy3274311.github.io"
+  }
+},
+{
+  "relation": ["delegate_permission/common.get_login_creds"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.wuba.wbvideoandroidapp",
+    "sha256_cert_fingerprints":
+    ["47:01:C2:8F:08:19:87:E9:74:C4:6C:72:E1:79:FF:22:32:03:19:C8:6C:28:83:0D:57:69:52:32:0E:16:ED:30"]
+  }
+}]
