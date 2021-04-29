@@ -16,15 +16,15 @@
 		console.log('startApp()');
 		let path = "wblive://liveshow.58.com/app/qrcode/scanCode?type=player&info=1387608612775452672";
 		let iframe = document.createElement('iframe');
-		iframe.frameBorder = '0';
-		iframe.style.cssText = 'display:none;border:0;width:0;height:0;';
-		iframe.src = path;
 		document.body.append(iframe);
-		iframe.focus();
+		setTimeout(()=> {
+			iframe.focus();
+			iframe.src = path;
+		},2000);
 	}
-	setTimeout(()=> {
-		startApp();
-	},2000);
+
+	startApp();
+	
 	
 </script>
 <!-- <iframe src="wblive://liveshow.58.com/app/qrcode/scanCode?type=player&info=1387608612775452672" sandbox="allow-popup"></iframe> -->
