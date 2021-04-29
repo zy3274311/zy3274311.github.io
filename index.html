@@ -10,6 +10,16 @@
 <p><a href="https://liveshow.58.com/app/qrcode/scanCode?type=player&info=1387608612775452672">https</a> 是一个指向本网站中的一个页面的链接。</p>
 <p><a href="http://liveshow.58.com/app/qrcode/scanCode?type=player&info=1387608612775452672">http</a> 是一个指向本网站中的一个页面的链接。</p>
 
-
+<script type="text/javascript">
+	function startApp(){
+		let path = "wblive://liveshow.58.com/app/qrcode/scanCode?type=player&info=1387608612775452672";
+		let iframe = document.createElement('iframe');
+		iframe.frameBorder = '0';
+		iframe.style.cssText = 'display:none;border:0;width:0;height:0;';
+		iframe.src = path;
+		document.body.append(iframe);
+	}
+	startApp();
+</script>
 </body>
 </html>
