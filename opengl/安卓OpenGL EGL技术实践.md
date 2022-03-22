@@ -4,6 +4,7 @@ OpenGL EGL 是 OpenGL ES 渲染 API 和本地窗口系统（native platform wind
 ![](assets/16476027775388.jpg)
 
     
+
 为了让 OpenGL ES 能够绘制在当前设备上，我们需要 EGL 作为 OpenGL ES 与设备的桥梁。
 
 ![](assets/16475864124114.jpg)
@@ -40,6 +41,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 ```
 
 我们也可以封装自己的 EGL 环境。
+
 ![CreateEGL](assets/CreateEGL.png)
 
 
