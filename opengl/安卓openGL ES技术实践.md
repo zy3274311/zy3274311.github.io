@@ -1,6 +1,6 @@
 # 安卓OpenGL ES技术实践
 
-### 创建着色器程序
+### 创建OpenGL程序
 ```
 int vertexShader = loadShader(GLES20.GL_VERTEX_SHADER, vertexSource);
 if (vertexShader == 0) {
@@ -30,7 +30,7 @@ GLES20.glDeleteProgram(program);
 }
 ```
 
-### 绘制纹理
+### OpenGL绘制
 ```
 // Select the program.
 GLES20.glUseProgram(mProgramHandle);
@@ -77,11 +77,13 @@ GLES20.glBindTexture(mTextureTarget, 0);
 GLES20.glUseProgram(0);
 ```
 
-### 销毁
+### 释放资源
 ```
 GLES20.glDeleteProgram(mProgramHandle);
 ```
 
 
 ### 参考
-https://arm-software.github.io/opengl-es-sdk-for-android/introduction_to_shaders.html
+* https://www.khronos.org/files/opengles20-reference-card.pdf
+* https://developer.android.com/guide/topics/graphics/opengl?hl=zh-cn
+* https://arm-software.github.io/opengl-es-sdk-for-android/introduction_to_shaders.html

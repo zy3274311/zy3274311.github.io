@@ -85,8 +85,8 @@ gl_Position、gl_FragColor
 kodelife、AS GLSL support plugin
 
 ### 参考
-https://www.khronos.org/opengl/wiki/Data_Type_(GLSL)
-https://www.khronos.org/opengl/wiki/Built-in_Variable_(GLSL)
-http://ptgmedia.pearsoncmg.com/images/9780321552624/downloads/0321552628_AppI.pdf
-https://colin1994.github.io/2017/11/11/OpenGLES-Lesson04/
-https://colin1994.github.io/2017/11/12/OpenGLES-Lesson05/
+* https://www.khronos.org/opengl/wiki/Data_Type_(GLSL)
+* https://www.khronos.org/opengl/wiki/Built-in_Variable_(GLSL)
+* http://ptgmedia.pearsoncmg.com/images/9780321552624/downloads/0321552628_AppI.pdf
+* https://colin1994.github.io/2017/11/11/OpenGLES-Lesson04/
+* https://colin1994.github.io/2017/11/12/OpenGLES-Lesson05/

@@ -152,7 +152,7 @@ public void createPbufferSurface(int width, int height) {
 }
 ```
     
-### Surface绑定EGL
+### 绑定EGLSurface
 ```
 public void makeCurrent() {
     checkIsNotReleased();
@@ -181,7 +181,7 @@ public void swapBuffers(long timeStampNs) {
     }
 }
 ```
-### 释放操作
+### 释放资源
 ```
 public void releaseSurface() {
     if (eglSurface != EGL14.EGL_NO_SURFACE) {
@@ -214,7 +214,7 @@ public void release() {
 ```
     
 ### 参考
-1. https://www.khronos.org/egl
-2. https://www.khronos.org/registry/EGL/sdk/docs/man/
-3. https://www.khronos.org/files/egl-1-4-quick-reference-card.pdf
-4. https://mp.weixin.qq.com/s?__biz=MzA4MjU1MDk3Ng==&mid=2451526566&idx=1&sn=44eae0fe0d0f758789fa29fc41109018&chksm=886ffa09bf18731f8e45f98de2bcc86c407b239499c2874a11f451dd8622f57f628588b9dd66&scene=178&cur_album_id=1337181710408302593#rd
+* https://www.khronos.org/egl
+* https://www.khronos.org/registry/EGL/sdk/docs/man/
+* https://www.khronos.org/files/egl-1-4-quick-reference-card.pdf
+
