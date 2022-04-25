@@ -1,6 +1,5 @@
 # Zhang Ying's learning resource about technics
 
-## About Me
 
 | Key              | Value                        |
 |------------------|------------------------------|
