@@ -12,19 +12,16 @@
 | Github Sit       | https://zy3274311.github.io/ |
 
 
-
-### [Android Develop](assets/Android%20Develop.html)
+### [Computer Basics](assets/Computer%20Basics.html)
 
 ### [Java Develop](assets/Java%20Develop.html)
 
-### Computer Basics
+### [Android Develop](assets/Android%20Develop.html)
 
-### AVMedia
+### [Media Develop](assets/Media%20Develop.html)
 
-### OpenGL
-* [安卓OpenGL EGL技术实践](opengl/%E5%AE%89%E5%8D%93OpenGL%20EGL%E6%8A%80%E6%9C%AF%E5%AE%9E%E8%B7%B5.html)
-* [安卓OpenGL ES技术实践](opengl/%E5%AE%89%E5%8D%93openGL%20ES%E6%8A%80%E6%9C%AF%E5%AE%9E%E8%B7%B5.html)
-* [GLSL技术实践](opengl/GLSL%E6%8A%80%E6%9C%AF%E5%AE%9E%E8%B7%B5.html)
+### [OpenGL Develop](assets/OpenGL%20Develop.html)
+
 
 
 
