@@ -13,6 +13,8 @@
 * 静态注册、动态注册
 
 ## java中的数据结构
+* HashMap
+* LinkedList
 
 ## 动态代理
 
