@@ -97,6 +97,6 @@
 ## androidx
 * ViewModel、AndroidViewModel
 * LiveData
-* Hilt
+* Hilt、Dagger
 * LifeCycle
 
