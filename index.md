@@ -15,7 +15,7 @@
 
 ### [Java Develop](assets/Java%20Develop.html)
 
-### [Android Develop](assets/Android%20Develop.html)
+### [Android Develop](android/Android%20Develop.html)
 
 ### [Media Develop](assets/Media%20Develop.html)
 
