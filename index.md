@@ -11,13 +11,13 @@
 | Github Sit       | https://zy3274311.github.io/ |
 
 
-### [Computer Basics](assets/Computer%20Basics.html)
+### [Computer Basics](Computer%20Basics/Computer%20Basics.html)
 
-### [Java Develop](assets/Java%20Develop.html)
+### [Java Develop](java/Java%20Develop.html)
 
 ### [Android Develop](android/Android%20Develop.html)
 
-### [Media Develop](assets/Media%20Develop.html)
+### [Media Develop](media/Media%20Develop.html)
 
 ### [OpenGL Develop](opengl/OpenGL%20Develop.html)
 
