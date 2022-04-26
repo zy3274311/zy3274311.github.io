@@ -106,9 +106,81 @@ static final int hash(Object key) {
     afterNodeInsertion(evict);
     ```
 * resize扩容
-    * 初次扩容
+    * 初次扩容，使用默认值，如已经有threshold,则直接使用旧threshold左右新的容量，新threshold临界值为新容量乘以加载因子capacity*loadFactor
+        ```
+        else if (oldThr > 0) // initial capacity was placed in threshold
+            newCap = oldThr;
+        else {               // zero initial threshold signifies using defaults
+            newCap = DEFAULT_INITIAL_CAPACITY;
+            newThr = (int)(DEFAULT_LOAD_FACTOR * DEFAULT_INITIAL_CAPACITY);
+        }
+        if (newThr == 0) {
+            float ft = (float)newCap * loadFactor;
+            newThr = (newCap < MAXIMUM_CAPACITY && ft < (float)MAXIMUM_CAPACITY ?
+                      (int)ft : Integer.MAX_VALUE);
+        }
+        ```
+    * 当达到容量最大值时不再扩容，直接返回旧table
+        ```
+        if (oldCap >= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        ```
+    * 扩容容量新capacity为旧capacity的2倍
+        ```
+        if (oldCap >= MAXIMUM_CAPACITY) {
+            threshold = Integer.MAX_VALUE;
+            return oldTab;
+        }
+        ```
+    * 旧table中的元素转移到新table中
+        * 当table中元素只有一个，则直接移动
+            ```
+            if (e.next == null)
+                newTab[e.hash & (newCap - 1)] = e;
+            ```
+        * 当table中的元素为TreeNode结构时，调用TreeNode的split方法，将树结构分为高低两个链表操作类似链表Node移动，分割链表元素书<=6则取消TreeNode改为Node，否则再次树化分割后的链表
+            ```
+            else if (e instanceof TreeNode)
+                ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+            ```
+        * 链表Node移动，分为高低两个链表，低链表仍然在原来的index，高链表节点放到index+oldCap的位置
+            ```
+            else { // preserve order
+                Node<K,V> loHead = null, loTail = null;
+                Node<K,V> hiHead = null, hiTail = null;
+                Node<K,V> next;
+                do {
+                    next = e.next;
+                    if ((e.hash & oldCap) == 0) {
+                        if (loTail == null)
+                            loHead = e;
+                        else
+                            loTail.next = e;
+                        loTail = e;
+                    }
+                    else {
+                        if (hiTail == null)
+                            hiHead = e;
+                        else
+                            hiTail.next = e;
+                        hiTail = e;
+                    }
+                } while ((e = next) != null);
+                if (loTail != null) {
+                    loTail.next = null;
+                    newTab[j] = loHead;
+                }
+                if (hiTail != null) {
+                    hiTail.next = null;
+                    newTab[j + oldCap] = hiHead;
+                }
+            }
+            ```
+        
 * 链表树化treeifyBin，链表Node转换为TreeNode红黑树结构
-* modCount作用
+* modCount作用，安全检查，防止遍历HashMap元素时，删增HashMap
 * 红黑树
     
 ### ConcurrentHashMap
