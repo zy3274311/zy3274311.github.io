@@ -24,6 +24,8 @@
 * 静态注册、动态注册
 
 ## java中的数据结构
+![](assets/16509897410753.jpg)
+
 ### HashMap
 * 初始化加载因子loadFactor（默认0.75f）
 * 初始容量initialCapacity，通过无符号右移计算出大于且最接近initialCapacity的threshold临界值为``$2^n$``
@@ -214,9 +216,7 @@ static final int hash(Object key) {
     
 ### ConcurrentHashMap
 * 分段锁
-    
-### LinkedList
-### TreeMap
+
 
 ## 动态代理
 
