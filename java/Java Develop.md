@@ -205,7 +205,7 @@ static final int hash(Object key) {
     afterNodeRemoval(node);
     return node;
     ```
-* modCount作用，安全检查，防止遍历HashMap元素时，删增HashMap
+* modCount作用是安全检查，防止遍历HashMap元素时，删增HashMap，否则抛异常ConcurrentModificationException
 * 红黑树操作
     * 链表Node转换为TreeNode红黑树结构treeifyBin，
     * 红黑树转换为链表untreeify
@@ -226,4 +226,4 @@ static final int hash(Object key) {
 
 ## 特殊关键字
 transient 防止Serializable序列化的字段
-default 
+default 接口中实现方法的关键字
