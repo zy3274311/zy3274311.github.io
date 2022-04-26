@@ -140,10 +140,20 @@ static final int hash(Object key) {
             if (e.next == null)
                 newTab[e.hash & (newCap - 1)] = e;
             ```
-        * 当table中的元素为TreeNode结构时，调用TreeNode的split方法，将树结构分为高低两个链表操作类似链表Node移动，分割链表元素书<=6则取消TreeNode改为Node，否则再次树化分割后的链表
+        * 当table中的元素为TreeNode结构时，调用TreeNode的split方法，将树结构分为高低两个链表操作类似链表Node移动
             ```
             else if (e instanceof TreeNode)
                 ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
+            ```
+            分割链表元素书<=6则取消TreeNode改为Node，否则再次树化分割后的链表
+            ```
+            if (lc <= UNTREEIFY_THRESHOLD)
+                    tab[index] = loHead.untreeify(map);
+            else {
+                tab[index] = loHead;
+                if (hiHead != null) // (else is already treeified)
+                    loHead.treeify(tab);
+            }
             ```
         * 链表Node移动，分为高低两个链表，低链表仍然在原来的index，高链表节点放到index+oldCap的位置
             ```
@@ -180,7 +190,7 @@ static final int hash(Object key) {
             ```
 * remove操作
     * 根据Key查找当前删除的Node
-    * 若Node是TreeNode，则调用删除树节点方法
+    * 若Node是TreeNode，则调用删除树节点方法（红黑树的节点删除），然后将root赋值给table元素
     * 若Node节点是Table元素，则把Node的next赋值给Table元素
     * 否则将Node按照链表删除方式删除，即把前一个Node的next指向当前节点的next
     ```
@@ -195,9 +205,12 @@ static final int hash(Object key) {
     afterNodeRemoval(node);
     return node;
     ```
-* 链表树化treeifyBin，链表Node转换为TreeNode红黑树结构
 * modCount作用，安全检查，防止遍历HashMap元素时，删增HashMap
-* 红黑树
+* 红黑树操作
+    * 链表Node转换为TreeNode红黑树结构treeifyBin，
+    * 红黑树转换为链表untreeify
+    * 红黑树删除节点putTreeVal
+    * 红黑树添加节点putTreeVal
     
 ### ConcurrentHashMap
 * 分段锁
