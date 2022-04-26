@@ -9,15 +9,15 @@
 * 线程锁
 
 ## 泛型<>
-super关键字在泛型中的使用
-extend关键字在泛型中的使用
-?的使用
-能否将固定格式强转位泛型格式
+* super关键字在泛型中的使用
+* extend关键字在泛型中的使用
+* ?的使用
+* 能否将固定格式强转位泛型格式
 
 ## 序列化
-Serializable
-Externalizable
-Parcelable
+* Serializable
+* Externalizable
+* Parcelable
 
 ## JNI
 * 内存管理
@@ -99,12 +99,21 @@ static final int hash(Object key) {
         }
         ```
     * 完成put操作后若HashMap长度大于threshold临界值，则进行resize扩容，最后调用afterNodeInsertion通知LinkedHashMap
+    ```
+    ++modCount;
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    ```
 * resize扩容
+    * 初次扩容
 * 链表树化treeifyBin，链表Node转换为TreeNode红黑树结构
+* modCount作用
 * 红黑树
     
 ### ConcurrentHashMap
 * 分段锁
+    
 ### LinkedList
 ### TreeMap
 
