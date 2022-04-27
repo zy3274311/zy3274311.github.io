@@ -13,6 +13,12 @@
 * 模块通信
 
 ## 应用启动
+* startActivity启动过程
+
+![安卓应用启动流程](assets/%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.png)
+
+
+
 * Zygote启动
 * ApplicationThread
 * ActivityThread
