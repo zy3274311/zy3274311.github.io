@@ -211,13 +211,12 @@ static final int hash(Object key) {
 * 红黑树操作
     * 链表Node转换为TreeNode红黑树结构treeifyBin，
     * 红黑树转换为链表untreeify
-    * 红黑树删除节点putTreeVal
+    * 红黑树删除节点removeTreeNode
     * 红黑树添加节点putTreeVal
     
 ### ConcurrentHashMap
 * 分段锁
-
-
+    
 ## 动态代理
 
 ## 反射
@@ -225,5 +224,5 @@ static final int hash(Object key) {
 ## 动态加载
 
 ## 特殊关键字
-transient 防止Serializable序列化的字段
-default 接口中实现方法的关键字
+* transient 防止Serializable序列化的字段
+* default 接口中实现方法的关键字
