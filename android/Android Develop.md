@@ -17,13 +17,15 @@
 ![](assets/16511124082433.jpg)
 
 * startActivity启动过程
-    
 ![安卓应用启动流程 ](assets/%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.jpg)
+![AMS启动进程流程图 -1-](assets/AMS%E5%90%AF%E5%8A%A8%E8%BF%9B%E7%A8%8B%E6%B5%81%E7%A8%8B%E5%9B%BE%20-1-.png)
+
 * 应用冷启动
     * ApplicationThread
     * ActivityThread
     * 主线程构建
     * Activity生命周期
+    
 * AMS
 * WMS
 * View绘制
