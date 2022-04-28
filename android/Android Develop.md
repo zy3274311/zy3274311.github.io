@@ -1,30 +1,80 @@
 # 安卓
-## APK编译流程
-* Gradle
-* APK内部结构
-* 应用发布
-
-## 应用架构
-* MVVM
-* MVP
-* MVC
-* 模块分层
-* 模块隔离
-* 模块通信
-
 ## 应用启动
-* Zygote启动
-![](assets/16511124082433.jpg)
+* Zygote进程或fork的子进程都由脚本启动，init.zygote32_64.rc脚本使用了两个Service类型语句启动了两个Zygote进程
+    ```
+    service zygote /system/bin/app_process32 -Xzygote /system/bin --zygote --start-system-server --socket-name=zygote
+    class main
+    priority -20
+    user root
+    group root readproc reserved_disk
+    socket zygote stream 660 root system
+    onrestart write /sys/android_power/request_state     wake
+    onrestart write /sys/power/state on
+    onrestart restart audioserver
+    onrestart restart cameraserver
+    onrestart restart media
+    onrestart restart netd
+    onrestart restart wificond
+    writepid /dev/cpuset/foreground/tasks 
+    
+    service zygote_secondary /system/bin/app_process64 -Xzygote /system/bin --zygote     --socket-name=zygote_secondary
+    class main
+    priority -20
+    user root
+    group root readproc reserved_disk
+    socket zygote_secondary stream 660 root system
+    onrestart restart zygote
+    writepid /dev/cpuset/foreground/tasks
+    ```
+* Zygote进程和由它fork出来的子进程都会进入app_main.cpp的main函数中
+    ```
+    int main(int argc, char* const argv[]) {
+    ...
+    while (i < argc) {
+        const char* arg = argv[i++];
+        if (strcmp(arg, "--zygote") == 0) {
+            zygote = true;
+            niceName = ZYGOTE_NICE_NAME;
+        } else if (strcmp(arg, "--start-system-server") == 0) {
+            startSystemServer = true;
+        } else if (strcmp(arg, "--application") == 0) {
+            application = true;
+        } else if (strncmp(arg, "--nice-name=", 12) == 0) {
+            niceName.setTo(arg + 12);
+        } else if (strncmp(arg, "--", 2) != 0) {
+            className.setTo(arg);
+            break;
+        } else {
+            --i;
+            break;
+        }
+    }
 
+    ...
+    
+    if (zygote) {
+        runtime.start("com.android.internal.os.ZygoteInit", args, zygote);
+    } else if (className) {
+        runtime.start("com.android.internal.os.RuntimeInit", args, zygote);
+    } else {
+        fprintf(stderr, "Error: no class name or --zygote supplied.\n");
+        app_usage();
+        LOG_ALWAYS_FATAL("app_process: no class name or --zygote supplied.");
+    }
+}
+    ```
+![](assets/16511124082433.jpg)
 * startActivity启动过程
 ![安卓应用启动流程 ](assets/%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.jpg)
+* AMS启动应用进程
 ![AMS启动进程流程图 -1-](assets/AMS%E5%90%AF%E5%8A%A8%E8%BF%9B%E7%A8%8B%E6%B5%81%E7%A8%8B%E5%9B%BE%20-1-.png)
-
-* 应用冷启动
+* 应用启动流程
     * ApplicationThread
     * ActivityThread
-    * 主线程构建
-    * Activity生命周期
+
+    ![ActivityThread启动流程 -4-](assets/ActivityThread%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%20-4-.png)
+
+    
     
 * AMS
 * WMS
@@ -41,6 +91,19 @@
 ## 进程通信
 * AIDL
 * Socket
+
+## APK编译流程
+* Gradle
+* APK内部结构
+* 应用发布
+
+## 应用架构
+* MVVM
+* MVP
+* MVC
+* 模块分层
+* 模块隔离
+* 模块通信
 
 ## NDK
 ### NDK编译
