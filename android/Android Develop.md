@@ -26,6 +26,7 @@
     onrestart restart zygote
     writepid /dev/cpuset/foreground/tasks
     ```
+    
 * Zygote进程和由它fork出来的子进程都会进入app_main.cpp的main函数中
     ```
     int main(int argc, char* const argv[]) {
@@ -49,7 +50,7 @@
             break;
         }
     }
-
+    
     ...
     
     if (zygote) {
@@ -61,22 +62,37 @@
         app_usage();
         LOG_ALWAYS_FATAL("app_process: no class name or --zygote supplied.");
     }
-}
+    }
     ```
-![](assets/16511124082433.jpg)
+    ![](assets/16511124082433.jpg)
+    
 * startActivity启动过程
-![安卓应用启动流程 ](assets/%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.jpg)
+  ![安卓应用启动流程 ](assets/%E5%AE%89%E5%8D%93%E5%BA%94%E7%94%A8%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B.jpg)
+
 * AMS启动应用进程
-![AMS启动进程流程图 -1-](assets/AMS%E5%90%AF%E5%8A%A8%E8%BF%9B%E7%A8%8B%E6%B5%81%E7%A8%8B%E5%9B%BE%20-1-.png)
+  ![AMS启动进程流程图 -1-](assets/AMS%E5%90%AF%E5%8A%A8%E8%BF%9B%E7%A8%8B%E6%B5%81%E7%A8%8B%E5%9B%BE%20-1-.png)
+
 * 应用启动流程
     * ApplicationThread
     * ActivityThread
 
     ![ActivityThread启动流程 -4-](assets/ActivityThread%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%20-4-.png)
 
-    
-    
-* AMS
+## Activity生命周期
+
+ApplicationThread调用scheduleThranaction,通过TransactionExecutor.execute(ClientTransaction transaction),executeLifecycleState执行后会自动补全中间的生命周期，launch Activity后会发送下个生命周期状态为resume，从onCreate到onResume中间的生命周期会补全
+
+```java
+public void execute(ClientTransaction transaction) {
+  ……
+  executeCallbacks(transaction);
+  executeLifecycleState(transaction);
+  ……
+}
+```
+
+
+
 * WMS
 * View绘制
 * View事件
@@ -113,19 +129,19 @@
 * make
 * ndk集成到自己的构建系统
 * JNI
-    
+  
 ### NDK API
 * GLES
 * OpenSL
 * OpenMax
 * ……
-    
+  
 ### NDK调试
 * Sampleperf
 * ndk-stack
 * adb logcat
 * trace
-    
+  
 ## 动态加载技术
 * 热修复
 * 插件化
@@ -133,12 +149,12 @@
 ## 优化
 ### 线程优化
 * 通过合理控制线程能提升性能（Thread、Runable、Executors、HandlerThread、AsyncTask、ThreadPoolExecutor）
-    
+  
 ### 包体积优化
 
 ### 内存管理
 * 内存泄漏问题（显示引用、隐示引用（内部类、匿名内部类））
-    
+  
 ### 电量优化
 ### 内存管理
 ### 问题排查
@@ -146,7 +162,7 @@
 * java crash
 * native carsh
 * 卡顿
-    
+  
 ### 调试
 * Trace
 
@@ -155,7 +171,7 @@
 * glide
 * rxjava
 * okhttp
-    
+  
 ## 安卓特有数据结构
 
 ### SparseArray
@@ -165,7 +181,7 @@
 * put位置为Delete则覆盖，否则后移元素后插入value
 * 如数组已满则创建新数组扩容，拷贝数据后再执行移动元素插入value操作,新数组长度size*2
 * gc有Delete标记的数据，元素前移
-    
+  
 ### ArrayMap
 * int[] mHashes、Object[] mArray双数组数据结构
 * mArray长度为mHashes的2倍
@@ -173,10 +189,9 @@
 * put操作覆盖原值，如index位置key不一致则后移元素后插入Value，mHashes后移一位，mArray后移两位
 * 如数组已满则进行扩容调用allocArrays(n)，然后调用freeArrays释放原数组，扩容数组长度为8、4分别使用缓存数组
 * 扩容的旧数组先对所有Value元素置空，然后存放缓存数组
-    
+  
 ## androidx
 * ViewModel、AndroidViewModel
 * LiveData
 * Hilt、Dagger
 * LifeCycle
-    
