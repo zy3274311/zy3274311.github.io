@@ -16,77 +16,117 @@
 
   操作系统：Ubuntu Server 20.04 LTS 64bit
 
-  ndk版本：ndk;24.0.8215888
+  ndk版本：ndk;22.0.7026061
 
-  ffmpeg版本：5.1
+  ffmpeg版本：5.0.1
 
   编译脚本
 
   ```sh
   #!/bin/bash
-  for abi in arm64-v8a armeabi-v7a x86 x86-64
+  
+  #set config
+  export BUILD_DIR=$PWD/build
+  
+  export ANDROID_SDK_ROOT=/usr/lib/android-sdk
+  
+  export ANDROID_NDK_ROOT=/usr/lib/android-sdk/ndk/22.0.7026061
+  
+  export TOOLCHAIN=$ANDROID_NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64
+  
+  export API_LEVEL=21
+  
+  export TARGET_BUILD_DIR=$PWD/build
+  echo "build dir is $TARGET_BUILD_DIR "
+  rm -rf $TARGET_BUILD_DIR
+  mkdir -p $TARGET_BUILD_DIR
+  
+  for abi in armeabi-v7a arm64-v8a x86 x86-64
+  
   do
   
-  export NDK=/home/ubuntu/sdk/ndk/24.0.8215888
-  export ABI=$abi
-  export PREFIX=/home/ubuntu/output/$ABI
-  # Only choose one of these, depending on your build machine...
-  # export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/darwin-x86_64
-  export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
-  export SYSROOT=$TOOLCHAIN/sysroot
+  export ANDROID_ABI=$abi
   
-  # Only choose one of these, depending on your device...
-  # export TARGET=aarch64-linux-android
-  # export TARGET=armv7a-linux-androideabi
-  # export TARGET=i686-linux-android
-  # export TARGET=x86_64-linux-android
-  case "$abi" in
-          "arm64-v8a")
-                  export TARGET=aarch64-linux-android
-                  ;;
-          "armeabi-v7a")i
-                  export TARGET=armv7a-linux-androideabi
-                  ;;
-          "x86")
-                  export TARGET=i686-linux-android
-                  ;;
-          "x86-64")
-                  export TARGET=x86_64-linux-android
-                  ;;
-          *)
-                  exit 1
-                  ;;
+  
+  case $ANDROID_ABI in
+  	armeabi-v7a)
+  		#For 32-bit ARM, the compiler is prefixed with armv7a-linux-androideabi, but the binutils tools are prefixed with arm-linux-androideabi. For other architectures, the prefixes are the same for all tools.@see https://developer.android.com/ndk/guides/other_build_systems
+  		export COMPILER_TARGET_PREFIX="armv7a-linux-androideabi"
+  		export BINUTILS_TARGET_PREFIX="arm-linux-androideabi"
+  		export ARCH_OPTIONS="	--disable-neon --enable-asm --enable-inline-asm "
+  		export ARCH=arm
+  		;;
+  	arm64-v8a)
+  		export COMPILER_TARGET_PREFIX="aarch64-linux-android"
+                  export BINUTILS_TARGET_PREFIX="aarch64-linux-android"
+  		export ARCH_OPTIONS=" 	--enable-neon --enable-asm --enable-inline-asm "
+  		export ARCH=aarch64
+  		;;
+  	x86)
+  		export COMPILER_TARGET_PREFIX="i686-linux-android"
+                  export BINUTILS_TARGET_PREFIX="i686-linux-android"
+  		export ARCH_OPTIONS=" 	--disable-neon --disable-asm --disable-inline-asm "
+  		export ARCH=i686
+  		;;
+  	x86-64)
+  		export COMPILER_TARGET_PREFIX="x86_64-linux-android"
+                  export BINUTILS_TARGET_PREFIX="x86_64-linux-android"
+  		export ARCH_OPTIONS="	--disable-neon --enable-asm --enable-inline-asm --x86asmexe=$TOOLCHAIN/bin/yasm"
+  		export ARCH=x86_64
+  		;;
+  	*)
+  		echo "$ANDROID_ABI fail"
+  		exit 1
+  		;;
   esac
   
-  # Set this to your minSdkVersion.
-  export API=21
+  export TARGET_PREFIX_DIR=$TARGET_BUILD_DIR/$ANDROID_ABI
+  echo "prefix dir is $TARGET_PREFIX_DIR "
+  rm -rf $TARGET_PREFIX_DIR
+  mkdir -p $TARGET_PREFIX_DIR
   
-  # Configure and build.
-  export AR=$TOOLCHAIN/bin/llvm-ar
-  export CC=$TOOLCHAIN/bin/$TARGET$API-clang
-  export AS=$CC
-  export CXX=$TOOLCHAIN/bin/$TARGET$API-clang++
-  export LD=$TOOLCHAIN/bin/ld
-  export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
-  export STRIP=$TOOLCHAIN/bin/llvm-strip
+  
+  export TARGET_AR=$TOOLCHAIN/bin/$BINUTILS_TARGET_PREFIX-ar
+  export TARGET_AS=$TOOLCHAIN/bin/$BINUTILS_TARGET_PREFIX-as
+  export TARGET_CC=$TOOLCHAIN/bin/$COMPILER_TARGET_PREFIX$API_LEVEL-clang
+  export TARGET_CXX=$TOOLCHAIN/bin/$COMPILER_TARGET_PREFIX$API_LEVEL-clang++
+  export TARGET_LD=$TOOLCHAIN/bin/$BINUTILS_TARGET_PREFIX-ld
+  export TARGET_RANLIB=$TOOLCHAIN/bin/$BINUTILS_TARGET_PREFIX-ranlib
+  export TARGET_STRIP=$TOOLCHAIN/bin/$BINUTILS_TARGET_PREFIX-strip
+  export TARGET_NM=$TOOLCHAIN/bin/$BINUTILS_TARGET_PREFIX-nm
+  
+  make distclean
+  
   ./configure \
-          --disable-asm \
-          --disable-doc \
-          --prefix=$PREFIX \
-          --enable-shared \
-          --enable-static \
-          --disable-programs \
-          --cc=$CC \
-          --cxx=$CXX \
-          --strip=$STRIP \
-          --enable-cross-compile
+   --prefix=${TARGET_PREFIX_DIR} \
+   --enable-cross-compile \
+   --target-os=android \
+   --arch=${ARCH} \
+   --sysroot=${TOOLCHAIN}/sysroot \
+   --cc=${TARGET_CC} \
+   --cxx=${TARGET_CXX} \
+   --ld=${TARGET_CC}  \
+   --ar=${TARGET_AR} \
+   --as=${TARGET_CC} \
+   --nm=${TARGET_NM} \
+   --ranlib=${TARGET_RANLIB} \
+   --strip=${TARGET_STRIP} \
+   --extra-cflags="-O3 -fPIC -I${PWD}/build/external/${ANDROID_ABI}/include" \
+   --extra-ldflags="-L${PWD}/build/external/${ANDROID_ABI}/lib " \
+   --pkg-config=/usr/bin/pkg-config \
+   --enable-shared --disable-static \
+   --disable-doc \
+   --disable-programs \
+   --enable-small \
+   --disable-debug \
+   ${ARCH_OPTIONS} || exit 1
+  # --x86asmexe=${TOOLCHAIN}/bin/yasm \
   
-  make clean
-  make -j8
-  make install
-  
+  make || exit 1
+  make install || exit 1
   
   done
+  
   ```
 
   
