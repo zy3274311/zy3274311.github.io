@@ -5,45 +5,262 @@
 ## 内存管理
 
 ## 多线程与线程锁
-* 线程池
+1. 线程
 
-* 线程锁
+2. 线程锁
 
-  * 乐观锁
+   ![7f749fc8](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/7f749fc8.png)	
 
-    ​	悲观锁认为自己在使用数据的时候一定有别的线程来修改数据，因此在获取数据的时候会先加锁，确保数据不会被别的线程修改。
+   - CAS原理
 
-    ​	synchronized关键字和Lock的实现类都是悲观锁。
+   - AQS原理
 
-  * 悲观锁
+   - CountDownLatch、CyclicBarrier、Semaphore
 
-    ​	乐观锁认为自己在使用数据时不会有别的线程修改数据，所以不会添加锁，只是在更新数据的时候去判断之前有没有别的线程更新了这个数据。如果这个数据没有被更新，当前线程将自己修改的数据成功写入。如果数据已经被其他线程更新，则根据不同的实现方式执行不同的操作（例如报错或者自动重试）。
+     - CountDownLatch
 
-    ​	乐观锁在Java中是通过使用无锁编程来实现，最常采用的是CAS算法，Java原子类中的递增操作就通过CAS(Compare And Swap)自旋实现的。
+       有一个任务A，它要等待其他4个任务执行完毕之后才能执行，此时就可以利用CountDownLatch来实现这种功能了。
 
-  * 自旋锁
+       ```java
+       class Driver { // ...
+           void main() throws InterruptedException {
+               CountDownLatch startSignal = new CountDownLatch(1);
+               CountDownLatch doneSignal = new CountDownLatch(N);
+       
+               for (int i = 0; i < N; ++i) // create and start threads
+                   new Thread(new Worker(startSignal, doneSignal)).start();
+       
+               doSomethingElse();            // don't let run yet
+               startSignal.countDown();      // let all threads proceed
+               doSomethingElse();
+               doneSignal.await();           // wait for all to finish
+           }
+       }
+       
+       class Worker implements Runnable {
+           private final CountDownLatch startSignal;
+           private final CountDownLatch doneSignal;
+       
+           Worker(CountDownLatch startSignal, CountDownLatch doneSignal) {
+               this.startSignal = startSignal;
+               this.doneSignal = doneSignal;
+           }
+       
+           public void run() {
+               try {
+                   startSignal.await();
+                   doWork();
+                   doneSignal.countDown();
+               } catch (InterruptedException ex) {
+               } // return;
+           }
+       
+           void doWork() { ...}
+       }
+       ```
 
-    自旋锁的原理是使用CAS，不挂起线程，痛殴循环实现自旋操作，AtomicInteger中调用unsafe进行自增操作的源码中的do-while循环就是一个自旋操作，如果修改数值失败则通过循环来执行自旋，直至修改成功。
+     - CyclicBarrier
 
-    ```
-    public final int getAndAddInt(Object o, long offset, int delta) {
-    	int v;
-      do {
-      v = this.getIntVolatile(o, offset);
-      } while(!this.weakCompareAndSetInt(o, offset, v, v + delta));
-    
-      return v;
-    }
-    ```
+       ```java
+       class Solver {
+           final int N;
+           final float[][] data;
+           final CyclicBarrier barrier;
+       
+           class Worker implements Runnable {
+               int myRow;
+       
+               Worker(int row) {
+                   myRow = row;
+               }
+       
+               public void run() {
+                   while (!done()) {
+                       processRow(myRow);
+       
+                       try {
+                           barrier.await();
+                       } catch (InterruptedException ex) {
+                           return;
+                       } catch (BrokenBarrierException ex) {
+                           return;
+                       }
+                   }
+               }
+           }
+       
+           public Solver(float[][] matrix) {
+               data = matrix;
+               N = matrix.length;
+               Runnable barrierAction =
+                       new Runnable() {
+                           public void run() {
+                               mergeRows(...);
+                           }
+                       };
+               barrier = new CyclicBarrier(N, barrierAction);
+       
+               List<Thread> threads = new ArrayList<>(N);
+               for (int i = 0; i < N; i++) {
+                   Thread thread = new Thread(new Worker(i));
+                   threads.add(thread);
+                   thread.start();
+               }
+       
+               // wait until done
+               for (Thread thread : threads)
+                   thread.join();
+           }
+       }
+       ```
 
-    ![452a3363](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/452a3363.png)
+       await()用来挂起当前线程，直至所有线程都到达barrier状态再同时执行后续任务,barrierAction为当这些线程都达到barrier状态时会执行的内容。CyclicBarrier运行完后可以重用。
 
-  * 适应性自旋锁
+     - Semaphore
 
-    在自旋锁中 另有三种常见的锁形式:TicketLock、CLHlock和MCSlock
+       ```java
+       
+       class Pool {
+           private static final int MAX_AVAILABLE = 100;
+           private final Semaphore available = new Semaphore(MAX_AVAILABLE, true);
+       
+           public Object getItem() throws InterruptedException {
+               available.acquire();
+               return getNextAvailableItem();
+           }
+       
+           public void putItem(Object x) {
+               if (markAsUnused(x))
+                   available.release();
+           }
+       
+           // Not a particularly efficient data structure; just for demo
+       
+           protected Object[] items = ...
+           whatever kinds
+           of items
+           being managed
+           protected boolean[] used = new boolean[MAX_AVAILABLE];
+       
+           protected synchronized Object getNextAvailableItem() {
+               for (int i = 0; i < MAX_AVAILABLE; ++i) {
+                   if (!used[i]) {
+                       used[i] = true;
+                       return items[i];
+                   }
+               }
+               return null; // not reached
+           }
+       
+           protected synchronized boolean markAsUnused(Object item) {
+               for (int i = 0; i < MAX_AVAILABLE; ++i) {
+                   if (item == items[i]) {
+                       if (used[i]) {
+                           used[i] = false;
+                           return true;
+                       } else
+                           return false;
+                   }
+               }
+               return false;
+           }
+       }
+       ```
 
-    
+       
 
+   - synchronized原理
+
+     - Java对象头
+
+       - Mark Word
+
+         ![1651735753195](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/1651735753195.jpg)
+
+       - Klass Point（指向类的指针）
+
+         该指针在32位JVM中的长度是32bit，在64位JVM中长度是64bit。
+
+         Java对象的类数据保存在方法区。
+
+       - 数组长度（只有数组对象才有）
+
+         只有数组对象保存了这部分数据。
+
+         该数据在32位和64位JVM中长度都是32bit。
+
+     - Monitor
+
+       Monitor可以理解为一个同步工具或一种同步机制，通常被描述为一个对象。每一个Java对象就有一把看不见的锁，称为内部锁或者Monitor锁。
+
+       Monitor是线程私有的数据结构，每一个线程都有一个可用monitor record列表，同时还有一个全局的可用列表。每一个被锁住的对象都会和一个monitor关联，同时monitor中有一个Owner字段存放拥有该锁的线程的唯一标识，表示该锁被这个线程占用。
+
+       现在话题回到synchronized，synchronized通过Monitor来实现线程同步，Monitor是依赖于底层的操作系统的Mutex Lock（互斥锁）来实现的线程同步。
+
+   * 无锁、偏向锁、轻量级锁、重量级锁
+
+   * 乐观锁、悲观锁
+
+     * 悲观锁
+
+       ​	悲观锁认为自己在使用数据的时候一定有别的线程来修改数据，因此在获取数据的时候会先加锁，确保数据不会被别的线程修改。
+
+       ​	synchronized关键字和Lock的实现类都是悲观锁。
+
+     * 乐观锁
+
+       ​	乐观锁认为自己在使用数据时不会有别的线程修改数据，所以不会添加锁，只是在更新数据的时候去判断之前有没有别的线程更新了这个数据。如果这个数据没有被更新，当前线程将自己修改的数据成功写入。如果数据已经被其他线程更新，则根据不同的实现方式执行不同的操作（例如报错或者自动重试）。
+
+       ​	乐观锁在Java中是通过使用无锁编程来实现，最常采用的是CAS算法，Java原子类中的递增操作就通过CAS(Compare And Swap)自旋实现的。
+
+   * 自旋锁、适应性自旋锁
+
+     * 自旋锁
+
+       ​	自旋锁的原理是使用CAS，不挂起线程，痛殴循环实现自旋操作，AtomicInteger中调用unsafe进行自增操作的源码中的do-while循环就是一个自旋操作，如果修改数值失败则通过循环来执行自旋，直至修改成功。
+
+       ```java
+       public final int getAndAddInt(Object o, long offset, int delta) {
+       	int v;
+         do {
+         v = this.getIntVolatile(o, offset);
+         } while(!this.weakCompareAndSetInt(o, offset, v, v + delta));
+       
+         return v;
+       }
+       ```
+
+       
+
+       ![452a3363](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/452a3363.png)
+
+     * 适应性自旋锁
+
+       ​	自旋锁本身是有缺点的，它不能代替阻塞。自旋等待虽然避免了线程切换的开销，但它要占用处理器时间。如果锁被占用的时间很短，自旋等待的效果就会非常好。反之，如果锁被占用的时间很长，那么自旋的线程只会白浪费处理器资源。所以，自旋等待的时间必须要有一定的限度，如果自旋超过了限定次数（默认是10次，可以使用-XX:PreBlockSpin来更改Java虚拟机设置适应性自旋锁开关）没有成功获得锁，就应当挂起线程。
+
+   * 公平锁、非公平锁
+
+     ​	ReentrantLock在构造方法里实现了FairSync与NonFairSync,default is NonFarSync
+
+     ​	synchronized为非公平锁，当一个线程想获取锁时，先试图插队，如果占用锁的线程释放了锁，下一个线程还没来得及拿锁，那么当前线程就可以直接获得锁；如果锁正在被其它线程占用，则排队，排队的时候就不能再试图获得锁了，只能等到前面所有线程都执行完才能获得锁。
+
+     ​	非公平锁的优点是可以减少唤起线程的开销，整体的吞吐效率高，因为线程有几率不阻塞直接获得锁，CPU不必唤醒所有线程。缺点是处于等待队列中的线程可能会饿死，或者等很久才会获得锁。
+
+   - 可重入锁、非可重入锁
+
+     - 可重入锁(ReentrantLock\synchronized)
+
+       ​	可重入锁又名递归锁，是指在同一个线程在外层方法获取锁的时候，再进入该线程的内层方法会自动获取锁（前提锁对象得是同一个对象或者class），不会因为之前已经获取过还没释放而阻塞。Java中ReentrantLock和synchronized都是可重入锁，可重入锁的一个优点是可一定程度避免死锁。
+
+     - 非可重入锁(NonReentrantLock)
+
+       ​	首先ReentrantLock和NonReentrantLock都继承父类AQS，其父类AQS中维护了一个同步状态status来计数重入次数，status初始值为0。	
+
+       ​	可重入锁先尝试获取并更新status值，如果status == 0表示没有其他线程在执行同步代码，则把status置为1，当前线程开始执行。如果status != 0，则判断当前线程是否是获取到这个锁的线程，如果是的话执行status+1，且当前线程可以再次获取锁。而非可重入锁是直接去获取并尝试更新当前status的值，如果status != 0的话会导致其获取锁失败，当前线程阻塞。
+
+   - 独享锁、共享锁
+
+   
 
 ## 泛型<>
 * super对应kotlin中的关键字in
