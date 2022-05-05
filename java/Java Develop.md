@@ -9,7 +9,7 @@
 
 2. 线程锁
 
-   ![7f749fc8](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/7f749fc8.png)	
+   ![7f749fc8](assets/7f749fc8.png)	
 
    - CAS原理
 
@@ -175,7 +175,7 @@
 
        - Mark Word
 
-         ![1651735753195](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/1651735753195.jpg)
+         ![1651735753195](assets/1651735753195.jpg)
 
        - Klass Point（指向类的指针）
 
@@ -232,7 +232,7 @@
 
        
 
-       ![452a3363](/Users/zhangying/Desktop/workspace/zy3274311.github.io/java/assets/452a3363.png)
+       ![452a3363](assets/452a3363.png)
 
      * 适应性自旋锁
 
