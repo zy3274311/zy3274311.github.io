@@ -430,7 +430,7 @@
 ### HashMap
 * 初始化加载因子loadFactor（默认0.75f）
 * 初始容量initialCapacity，通过无符号右移计算出大于且最接近initialCapacity的threshold临界值为``$2^n$``
-```
+```java
 static final int tableSizeFor(int cap) {
     int n = cap - 1;
     n |= n >>> 1;
@@ -442,7 +442,7 @@ static final int tableSizeFor(int cap) {
 }
 ```
 * hash计算，hashcode前16位与后16位进行异或位运算
-```
+```java
 static final int hash(Object key) {
     int h;
     return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
@@ -451,33 +451,33 @@ static final int hash(Object key) {
 * HashMap内的数据存储在table数组中，table的元素为Node链表结构，当Node链表长度>=8时转换为红黑树，同时Node转换为TreeNode
 * put操作
     * table为空则resize进行扩容
-    ```
+    ```java
     Node<K,V>[] tab; Node<K,V> p; int n, i;
     if ((tab = table) == null || (n = tab.length) == 0)
         n = (tab = resize()).length;
     ```
     * 计算key对应在table中的index位置，若当前index无数据则直接赋值新Node
-    ```
+    ```java
     if ((p = tab[i = (n - 1) & hash]) == null)
         tab[i] = newNode(hash, key, value, null);
     ```
     * 若当前index存在数据
         * 若当前Node的Key是否与插入Key一致，则插入Value
-        ```
+        ```java
         Node<K,V> e; K k;
         if (p.hash == hash &&
             ((k = p.key) == key || (key != null && key.equals(k))))
             e = p;
         ```
         * 若当前Node为TreeNode则插入红黑树
-        ```
+        ```java
         else if (p instanceof TreeNode)
             e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
         ```
         * 否则插入到链表Node中
             * 若在Node链表中查找到插入Key则插入Value
             * 否则创建直接在Node链表的末尾插入新Node，插入后若链表长度是否达到临界值8，则将链表转换为红黑树
-        ```
+        ```java
         for (int binCount = 0; ; ++binCount) {
             if ((e = p.next) == null) {
                 p.next = newNode(hash, key, value, null);
@@ -492,7 +492,7 @@ static final int hash(Object key) {
         }
         ```
         * 插入存在的Key的Node后需要调用afterNodeAccess通知LinkedHashMap
-        ```
+        ```java
         if (e != null) { // existing mapping for key
             V oldValue = e.value;
             if (!onlyIfAbsent || oldValue == null)
@@ -502,7 +502,7 @@ static final int hash(Object key) {
         }
         ```
     * 完成put操作后若HashMap长度大于threshold临界值，则进行resize扩容，最后调用afterNodeInsertion通知LinkedHashMap
-    ```
+    ```java
     ++modCount;
     if (++size > threshold)
         resize();
@@ -510,7 +510,7 @@ static final int hash(Object key) {
     ```
 * resize扩容
     * 初次扩容，使用默认值，如已经有threshold,则直接使用旧threshold左右新的容量，新threshold临界值为新容量乘以加载因子capacity*loadFactor
-        ```
+        ```java
         else if (oldThr > 0) // initial capacity was placed in threshold
             newCap = oldThr;
         else {               // zero initial threshold signifies using defaults
@@ -524,14 +524,14 @@ static final int hash(Object key) {
         }
         ```
     * 当达到容量最大值时不再扩容，直接返回旧table
-        ```
+        ```java
         if (oldCap >= MAXIMUM_CAPACITY) {
             threshold = Integer.MAX_VALUE;
             return oldTab;
         }
         ```
     * 扩容容量新capacity为旧capacity的2倍
-        ```
+        ```java
         if (oldCap >= MAXIMUM_CAPACITY) {
             threshold = Integer.MAX_VALUE;
             return oldTab;
@@ -539,17 +539,17 @@ static final int hash(Object key) {
         ```
     * 旧table中的元素转移到新table中
         * 当table中元素只有一个，则直接移动
-            ```
+            ```java
             if (e.next == null)
                 newTab[e.hash & (newCap - 1)] = e;
             ```
         * 当table中的元素为TreeNode结构时，调用TreeNode的split方法，将树结构分为高低两个链表操作类似链表Node移动
-            ```
+            ```java
             else if (e instanceof TreeNode)
                 ((TreeNode<K,V>)e).split(this, newTab, j, oldCap);
             ```
             分割链表元素书<=6则取消TreeNode改为Node，否则再次树化分割后的链表
-            ```
+            ```java
             if (lc <= UNTREEIFY_THRESHOLD)
                     tab[index] = loHead.untreeify(map);
             else {
@@ -559,7 +559,7 @@ static final int hash(Object key) {
             }
             ```
         * 链表Node移动，分为高低两个链表，低链表仍然在原来的index，高链表节点放到index+oldCap的位置
-            ```
+            ```java
             else { // preserve order
                 Node<K,V> loHead = null, loTail = null;
                 Node<K,V> hiHead = null, hiTail = null;
@@ -596,7 +596,7 @@ static final int hash(Object key) {
     * 若Node是TreeNode，则调用删除树节点方法（红黑树的节点删除），然后将root赋值给table元素
     * 若Node节点是Table元素，则把Node的next赋值给Table元素
     * 否则将Node按照链表删除方式删除，即把前一个Node的next指向当前节点的next
-    ```
+    ```java
     if (node instanceof TreeNode)
         ((TreeNode<K,V>)node).removeTreeNode(this, tab, movable);
     else if (node == p)
