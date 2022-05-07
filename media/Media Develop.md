@@ -126,7 +126,17 @@
   make install || exit 1
   
   done
-  
   ```
-
   
+
+​		https支持：
+
+​		单独下载编译openssl库，并将openssl库下不同架构的库目		录配置到ffmpeg的编译环境cflags及ldflags中		
+
+### libavformat
+
+### libavcodec
+
+### libswresample
+
+### libavutil

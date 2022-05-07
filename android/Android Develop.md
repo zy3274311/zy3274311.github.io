@@ -1,7 +1,7 @@
 # 安卓
 ## 应用启动
 * Zygote进程或fork的子进程都由脚本启动，init.zygote32_64.rc脚本使用了两个Service类型语句启动了两个Zygote进程
-    ```
+    ```shell
     service zygote /system/bin/app_process32 -Xzygote /system/bin --zygote --start-system-server --socket-name=zygote
     class main
     priority -20
@@ -28,7 +28,7 @@
     ```
     
 * Zygote进程和由它fork出来的子进程都会进入app_main.cpp的main函数中
-    ```
+    ```java
     int main(int argc, char* const argv[]) {
     ...
     while (i < argc) {
@@ -156,7 +156,6 @@ public void execute(ClientTransaction transaction) {
 * 内存泄漏问题（显示引用、隐示引用（内部类、匿名内部类））
   
 ### 电量优化
-### 内存管理
 ### 问题排查
 * ANR
 * java crash
