@@ -142,9 +142,233 @@ public void execute(ClientTransaction transaction) {
 * adb logcat
 * trace
   
-## 动态加载技术
-* 热修复
-* 插件化
+## 动态加载
+
+### ClassLoader
+
+- loadClass
+
+  ```java
+  protected Class<?> loadClass(String name, boolean resolve)
+          throws ClassNotFoundException {
+      // First, check if the class has already been loaded
+      Class<?> c = findLoadedClass(name);
+      if (c == null) {
+          try {
+              if (parent != null) {
+                  c = parent.loadClass(name, false);
+              } else {
+                  c = findBootstrapClassOrNull(name);
+              }
+          } catch (ClassNotFoundException e) {
+              // ClassNotFoundException thrown if class not found
+              // from the non-null parent class loader
+          }
+  
+          if (c == null) {
+              // If still not found, then invoke findClass in order
+              // to find the class.
+              c = findClass(name);
+          }
+      }
+      return c;
+  }
+  ```
+
+- findLoadedClass
+
+  ```java
+  protected final Class<?> findLoadedClass(String name) {
+      ClassLoader loader;
+      if (this == BootClassLoader.getInstance())
+          loader = null;
+      else
+          loader = this;
+      return VMClassLoader.findLoadedClass(loader, name);
+  }
+  ```
+
+### BootClassLoader
+
+```java
+class BootClassLoader extends ClassLoader
+```
+
+- system classloader
+
+  ```java
+  private static ClassLoader createSystemClassLoader() {
+      String classPath = System.getProperty("java.class.path", ".");
+      String librarySearchPath = System.getProperty("java.library.path", "");
+      ……
+      return new PathClassLoader(classPath, librarySearchPath, BootClassLoader.getInstance());
+  }
+  ```
+
+- loadClass	
+
+  ```java
+  @Override
+  protected Class<?> loadClass(String className, boolean resolve)
+    throws ClassNotFoundException {
+      Class<?> clazz = findLoadedClass(className);
+      if (clazz == null) {
+          clazz = findClass(className);
+      }
+      return clazz;
+  }
+  ```
+
+- findClass
+
+  ```java
+  @Override
+  protected Class<?> findClass(String name) throws ClassNotFoundException {
+      return Class.classForName(name, false, null);
+  }
+  ```
+
+### BaseDexClassLoader
+
+```java
+public class BaseDexClassLoader extends ClassLoader
+```
+
+```java
+public BaseDexClassLoader(String dexPath,
+                          String librarySearchPath, ClassLoader parent, ClassLoader[] sharedLibraryLoaders,
+                          ClassLoader[] sharedLibraryLoadersAfter,
+                          boolean isTrusted) {
+    super(parent);
+    // Setup shared libraries before creating the path list. ART relies on the class loader
+    // hierarchy being finalized before loading dex files.
+    this.sharedLibraryLoaders = sharedLibraryLoaders == null
+      ? null
+      : Arrays.copyOf(sharedLibraryLoaders, sharedLibraryLoaders.length);
+    this.pathList = new DexPathList(this, dexPath, librarySearchPath, null, isTrusted);
+    this.sharedLibraryLoadersAfter = sharedLibraryLoadersAfter == null
+      ? null
+      : Arrays.copyOf(sharedLibraryLoadersAfter, sharedLibraryLoadersAfter.length);
+    // Run background verification after having set 'pathList'.
+    this.pathList.maybeRunBackgroundVerification(this);
+    reportClassLoaderChain();
+}
+```
+
+- findClass
+
+  ```java
+  @Override
+  protected Class<?> findClass(String name) throws ClassNotFoundException {
+      // First, check whether the class is present in our shared libraries.
+      if (sharedLibraryLoaders != null) {
+          for (ClassLoader loader : sharedLibraryLoaders) {
+              try {
+                  return loader.loadClass(name);
+              } catch (ClassNotFoundException ignored) {
+              }
+          }
+      }
+      // Check whether the class in question is present in the dexPath that
+      // this classloader operates on.
+      List<Throwable> suppressedExceptions = new ArrayList<Throwable>();
+      Class c = pathList.findClass(name, suppressedExceptions);
+      if (c != null) {
+          return c;
+      }
+      // Now, check whether the class is present in the "after" shared libraries.
+      if (sharedLibraryLoadersAfter != null) {
+          for (ClassLoader loader : sharedLibraryLoadersAfter) {
+              try {
+                  return loader.loadClass(name);
+              } catch (ClassNotFoundException ignored) {
+              }
+          }
+      }
+      if (c == null) {
+          ClassNotFoundException cnfe = new ClassNotFoundException(
+                  "Didn't find class \"" + name + "\" on path: " + pathList);
+          for (Throwable t : suppressedExceptions) {
+              cnfe.addSuppressed(t);
+          }
+          throw cnfe;
+      }
+      return c;
+  }
+  ```
+
+### DexPathList
+
+```java
+DexPathList(ClassLoader definingContext, String dexPath,
+            String librarySearchPath, File optimizedDirectory, boolean isTrusted) {
+    if (definingContext == null) {
+        throw new NullPointerException("definingContext == null");
+    }
+    if (dexPath == null) {
+        throw new NullPointerException("dexPath == null");
+    }
+    if (optimizedDirectory != null) {
+        if (!optimizedDirectory.exists()) {
+            throw new IllegalArgumentException(
+                    "optimizedDirectory doesn't exist: "
+                            + optimizedDirectory);
+        }
+        if (!(optimizedDirectory.canRead()
+                && optimizedDirectory.canWrite())) {
+            throw new IllegalArgumentException(
+                    "optimizedDirectory not readable/writable: "
+                            + optimizedDirectory);
+        }
+    }
+    this.definingContext = definingContext;
+    ArrayList<IOException> suppressedExceptions = new ArrayList<IOException>();
+    // save dexPath for BaseDexClassLoader
+    this.dexElements = makeDexElements(splitDexPath(dexPath), optimizedDirectory,
+            suppressedExceptions, definingContext, isTrusted);
+    // Native libraries may exist in both the system and
+    // application library paths, and we use this search order:
+    //
+    //   1. This class loader's library path for application libraries (librarySearchPath):
+    //   1.1. Native library directories
+    //   1.2. Path to libraries in apk-files
+    //   2. The VM's library path from the system property for system libraries
+    //      also known as java.library.path
+    //
+    // This order was reversed prior to Gingerbread; see http://b/2933456.
+    this.nativeLibraryDirectories = splitPaths(librarySearchPath, false);
+    this.systemNativeLibraryDirectories =
+            splitPaths(System.getProperty("java.library.path"), true);
+    this.nativeLibraryPathElements = makePathElements(getAllNativeLibraryDirectories());
+    if (suppressedExceptions.size() > 0) {
+        this.dexElementsSuppressedExceptions =
+                suppressedExceptions.toArray(new IOException[suppressedExceptions.size()]);
+    } else {
+        dexElementsSuppressedExceptions = null;
+    }
+}
+```
+
+- findClass
+
+  ```java
+  public Class<?> findClass(String name, List<Throwable> suppressed) {
+      for (Element element : dexElements) {
+          Class<?> clazz = element.findClass(name, definingContext, suppressed);
+          if (clazz != null) {
+              return clazz;
+          }
+      }
+      if (dexElementsSuppressedExceptions != null) {
+          suppressed.addAll(Arrays.asList(dexElementsSuppressedExceptions));
+      }
+      return null;
+  }
+  ```
+
+### 热修复
+
+### 插件化
 
 ## 优化
 ### 线程优化

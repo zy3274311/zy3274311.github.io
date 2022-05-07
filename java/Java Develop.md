@@ -622,8 +622,7 @@ static final int hash(Object key) {
 
 ## 反射
 
-## 动态加载
-
 ## 特殊关键字
+
 * transient 防止Serializable序列化的字段
 * default 接口中实现方法的关键字
