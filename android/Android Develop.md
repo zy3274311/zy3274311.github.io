@@ -67,7 +67,7 @@
     ![](assets/16511124082433.jpg)
     
 * startActivity启动过程
-  ![安卓应用启动流程](/Users/zhangying/Desktop/workspace/zy3274311.github.io/android/assets/安卓应用启动流程.jpg)
+  ![安卓应用启动流程](assets/安卓应用启动流程.jpg)
 
 * AMS启动应用进程
   ![AMS启动进程流程图 -1-](assets/AMS%E5%90%AF%E5%8A%A8%E8%BF%9B%E7%A8%8B%E6%B5%81%E7%A8%8B%E5%9B%BE%20-1-.png)
