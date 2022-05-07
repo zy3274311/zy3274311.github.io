@@ -98,15 +98,356 @@ public void execute(ClientTransaction transaction) {
 * View事件
 
 ## 线程通信
-* Handler
-* MessageQueue
-* Message
-* Looper
-* AIDL的调用线程问题
+
+### HandlerThread
+
+`HandlerThread`内部使用了`Looper`，同时对Looper加锁防止因异步导致获取Looper为空
+
+```java
+@Override
+public void run() {
+    mTid = Process.myTid();
+    Looper.prepare();
+    synchronized (this) {
+        mLooper = Looper.myLooper();
+        notifyAll();
+    }
+    Process.setThreadPriority(mPriority);
+    onLooperPrepared();
+    Looper.loop();
+    mTid = -1;
+}
+
+public Looper getLooper() {
+    if (!isAlive()) {
+      	return null;
+    }
+
+    boolean wasInterrupted = false;
+
+    // If the thread has been started, wait until the looper has been created.
+    synchronized (this) {
+        while (isAlive() && mLooper == null) {
+            try {
+              	wait();
+            } catch (InterruptedException e) {
+              	wasInterrupted = true;
+            }
+        }
+    }
+
+  	/*
+     * We may need to restore the thread's interrupted flag, because it may
+     * have been cleared above since we eat InterruptedExceptions
+     */
+    if (wasInterrupted) {
+      	Thread.currentThread().interrupt();
+    }
+
+    return mLooper;
+}	
+```
+
+
+
+### Looper
+
+```java
+public final class Looper {
+  	...
+    static final ThreadLocal<Looper> sThreadLocal = new ThreadLocal<Looper>();
+  	...
+  	private Looper(boolean quitAllowed) {
+        mQueue = new MessageQueue(quitAllowed);
+        mThread = Thread.currentThread();
+    }
+		...
+    public static void prepare() {
+        prepare(true);
+    }
+		...
+    private static void prepare(boolean quitAllowed) {
+        if (sThreadLocal.get() != null) {
+            throw new RuntimeException("Only one Looper may be created per thread");
+        }
+        sThreadLocal.set(new Looper(quitAllowed));
+    }
+  	...
+    public static void loop() {
+        final Looper me = myLooper();
+        ...
+        for (;;) {
+            if (!loopOnce(me, ident, thresholdOverride)) {
+                return;
+            }
+        }
+    }
+  	...
+    private static boolean loopOnce(final Looper me,
+            final long ident, final int thresholdOverride) {
+        Message msg = me.mQueue.next(); // might block
+        if (msg == null) {
+            // No message indicates that the message queue is quitting.
+            return false;
+        }
+      	...
+        try {
+            msg.target.dispatchMessage(msg);
+          	...
+        } catch (Exception exception) {
+						...
+            throw exception;
+        } finally {
+            ...
+        }
+      	...
+        msg.recycleUnchecked();
+        return true;
+    }
+}
+
+public class ThreadLocal<T> {
+  	...
+    public void set(T value) {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        if (map != null)
+            map.set(this, value);
+        else
+            createMap(t, value);
+    }
+  	...
+}
+```
+
+`Looper`被`sThreadLocal`保持在`Thread`的变量`ThreadLocalMap`中，key为`sThreadLocal`，`sThreadLocal`为全局静态变量，所以每个`Thread`只能存放一个`Looper`
+
+### Handler
+
+```java
+public Handler(@NonNull Looper looper, @Nullable Callback callback, boolean async) {
+    mLooper = looper;
+    mQueue = looper.mQueue;
+    mCallback = callback;
+    mAsynchronous = async;
+}
+```
+
+async – If true, the handler calls Message.setAsynchronous(boolean) for each
+
+```java
+private boolean enqueueMessage(@NonNull MessageQueue queue, @NonNull Message msg,
+long uptimeMillis) {
+    msg.target = this;
+    msg.workSourceUid = ThreadLocalWorkSource.getUid();
+
+    if (mAsynchronous) {
+    msg.setAsynchronous(true);
+    }
+    return queue.enqueueMessage(msg, uptimeMillis);
+}
+```
+
+### MessageQueue
+
+```java
+public final class MessageQueue {
+  	...
+		private native static long nativeInit();
+    private native static void nativeDestroy(long ptr);
+    @UnsupportedAppUsage
+    private native void nativePollOnce(long ptr, int timeoutMillis); /*non-static for callbacks*/
+    private native static void nativeWake(long ptr);
+    private native static boolean nativeIsPolling(long ptr);
+    private native static void nativeSetFileDescriptorEvents(long ptr, int fd, int events);
+
+    MessageQueue(boolean quitAllowed) {
+        mQuitAllowed = quitAllowed;//主线程禁止用户调用quit
+        mPtr = nativeInit();
+    }
+  	...
+    boolean enqueueMessage(Message msg, long when) {
+				...
+        synchronized (this) {
+          	...
+            msg.markInUse();
+            msg.when = when;
+            Message p = mMessages;
+            boolean needWake;
+            if (p == null || when == 0 || when < p.when) {
+                // New head, wake up the event queue if blocked.
+                msg.next = p;
+                mMessages = msg;
+                needWake = mBlocked;
+            } else {
+                // Inserted within the middle of the queue.  Usually we don't have to wake
+                // up the event queue unless there is a barrier at the head of the queue
+                // and the message is the earliest asynchronous message in the queue.
+                needWake = mBlocked && p.target == null && msg.isAsynchronous();
+                Message prev;
+                for (;;) {
+                    prev = p;
+                    p = p.next;
+                    if (p == null || when < p.when) {
+                        break;
+                    }
+                    if (needWake && p.isAsynchronous()) {
+                        needWake = false;
+                    }
+                }
+                msg.next = p; // invariant: p == prev.next
+                prev.next = msg;
+            }
+
+            // We can assume mPtr != 0 because mQuitting is false.
+            if (needWake) {
+                nativeWake(mPtr);
+            }
+        }
+        return true;
+    }
+  	...
+    Message next() {
+        // Return here if the message loop has already quit and been disposed.
+        // This can happen if the application tries to restart a looper after quit
+        // which is not supported.
+        final long ptr = mPtr;
+        if (ptr == 0) {
+            return null;
+        }
+
+        int pendingIdleHandlerCount = -1; // -1 only during first iteration
+        int nextPollTimeoutMillis = 0;
+        for (;;) {
+            if (nextPollTimeoutMillis != 0) {
+                Binder.flushPendingCommands();
+            }
+
+            nativePollOnce(ptr, nextPollTimeoutMillis);
+
+            synchronized (this) {
+                // Try to retrieve the next message.  Return if found.
+                final long now = SystemClock.uptimeMillis();
+                Message prevMsg = null;
+                Message msg = mMessages;
+                if (msg != null && msg.target == null) {
+                    // Stalled by a barrier.  Find the next asynchronous message in the queue.
+                    do {
+                        prevMsg = msg;
+                        msg = msg.next;
+                    } while (msg != null && !msg.isAsynchronous());
+                }
+                if (msg != null) {
+                    if (now < msg.when) {
+                        // Next message is not ready.  Set a timeout to wake up when it is ready.
+                        nextPollTimeoutMillis = (int) Math.min(msg.when - now, Integer.MAX_VALUE);
+                    } else {
+                        // Got a message.
+                        mBlocked = false;
+                        if (prevMsg != null) {
+                            prevMsg.next = msg.next;
+                        } else {
+                            mMessages = msg.next;
+                        }
+                        msg.next = null;
+                        if (DEBUG) Log.v(TAG, "Returning message: " + msg);
+                        msg.markInUse();
+                        return msg;
+                    }
+                } else {
+                    // No more messages.
+                    nextPollTimeoutMillis = -1;
+                }
+
+                // Process the quit message now that all pending messages have been handled.
+                if (mQuitting) {
+                    dispose();
+                    return null;
+                }
+
+                // If first time idle, then get the number of idlers to run.
+                // Idle handles only run if the queue is empty or if the first message
+                // in the queue (possibly a barrier) is due to be handled in the future.
+                if (pendingIdleHandlerCount < 0
+                        && (mMessages == null || now < mMessages.when)) {
+                    pendingIdleHandlerCount = mIdleHandlers.size();
+                }
+                if (pendingIdleHandlerCount <= 0) {
+                    // No idle handlers to run.  Loop and wait some more.
+                    mBlocked = true;
+                    continue;
+                }
+
+                if (mPendingIdleHandlers == null) {
+                    mPendingIdleHandlers = new IdleHandler[Math.max(pendingIdleHandlerCount, 4)];
+                }
+                mPendingIdleHandlers = mIdleHandlers.toArray(mPendingIdleHandlers);
+            }
+
+            // Run the idle handlers.
+            // We only ever reach this code block during the first iteration.
+            for (int i = 0; i < pendingIdleHandlerCount; i++) {
+                final IdleHandler idler = mPendingIdleHandlers[i];
+                mPendingIdleHandlers[i] = null; // release the reference to the handler
+
+                boolean keep = false;
+                try {
+                    keep = idler.queueIdle();
+                } catch (Throwable t) {
+                    Log.wtf(TAG, "IdleHandler threw exception", t);
+                }
+
+                if (!keep) {
+                    synchronized (this) {
+                        mIdleHandlers.remove(idler);
+                    }
+                }
+            }
+
+            // Reset the idle handler count to 0 so we do not run them again.
+            pendingIdleHandlerCount = 0;
+
+            // While calling an idle handler, a new message could have been delivered
+            // so go back and look again for a pending message without waiting.
+            nextPollTimeoutMillis = 0;
+        }
+    }
+  	...
+    void quit(boolean safe) {
+        if (!mQuitAllowed) {
+            throw new IllegalStateException("Main thread not allowed to quit.");
+        }
+
+        synchronized (this) {
+            if (mQuitting) {
+                return;
+            }
+            mQuitting = true;
+
+            if (safe) {
+                removeAllFutureMessagesLocked();
+            } else {
+                removeAllMessagesLocked();
+            }
+
+            // We can assume mPtr != 0 because mQuitting was previously false.
+            nativeWake(mPtr);
+        }
+    }
+  	...
+}
+```
+
+
 
 ## 进程通信
-* AIDL
-* Socket
+### AIDL
+
+- aidl结构
+- 共享内存
+- 线程调用
+
+### Socket
 
 ## APK编译流程
 * Gradle
@@ -390,11 +731,12 @@ DexPathList(ClassLoader definingContext, String dexPath,
 * Trace
 
 ## 第三方库及框架
-* retrofit
-* glide
-* rxjava
-* okhttp
-  
+### retrofit
+
+### glide
+
+### okhttp
+
 ## 安卓特有数据结构
 
 ### SparseArray
