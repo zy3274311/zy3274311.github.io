@@ -441,10 +441,12 @@ public final class MessageQueue {
 
 
 ## 进程通信
+
+### 共享内存
+
 ### AIDL
 
 - aidl结构
-- 共享内存
 - 线程调用
 
 ### Socket
