@@ -15,11 +15,31 @@
 
 ![WechatIMG3](assets/WechatIMG3.jpeg)
 
+### TLS
 
+![97_3_0_](assets/97_3_0_.png)
+
+#### TLS握手
+
+​		Client 先发送 ClientHello ，在这条消息中，Client 会上报它支持的所有“能力”。client_version 中标识了 Client 能支持的最高 TLS 版本号；random 中标识了 Client 生成的随机数，用于预备主密钥和主密钥以及密钥块的生成，总长度是 32 字节，其中前 4 个字节是时间戳，后 28 个字节是随机数；cipher_suites 标识了 Client 能够支持的密码套件。extensions 中标识了 Client 能够支持的所有扩展。
+
+​		Server 在收到 ClientHello 之后，如果能够继续协商，就会发送 ServerHello，否则发送 Hello Request 重新协商。在 ServerHello 中，Server 会结合 Client 的能力，选择出双方都支持的协议版本以及密码套件进行下一步的握手流程。server_version 中标识了经过协商以后，Server 选出了双方都支持的协议版本。random 中标识了 Server 生成的随机数，用于预备主密钥和主密钥以及密钥块的生成，总长度是 32 字节，其中前 4 个字节是时间戳，后 28 个字节是随机数；cipher_suites 标识了经过协商以后，Server 选出了双方都支持的密码套件。extensions 中标识了 Server 处理 Client 的 extensions 之后的结果。
+
+​		当协商出了双方都能满足的密钥套件，根据需要 Server 会发送 Certificate 消息。Certificate 消息会带上 Server 的证书链。Certificate 消息的目的一是为了验证 Server 身份，二是为了让 Client 根据协商出来的密码套件从证书中获取 Server 的公钥。Client 拿到 Server 的公钥和 server 的 random 会生成预备主密钥。
+
+​		由于密钥协商算法是 RSA，需要 Server 在发送完 Certificate 消息以后就直接发送 ServerHelloDone 消息了。
+
+#### 主密钥交换
+
+​		Client 收到 ServerHelloDone 消息以后，会开始计算预备主密钥，计算出来的预备主密钥会经过 RSA/ECDSA 算法加密，并通过 ClientKeyExchange 消息发送给 Server。RSA 密码套件的预备主密钥是 48 字节。前 2 个字节是 client_version，后 46 字节是随机数。Server 收到 ClientKeyExchange 消息以后就会开始计算主密钥和密钥块了。同时 Client 也会在自己本地算好主密钥和密钥块。
+
+​		Client 发送完 ClientKeyExchange 消息紧接着还会继续发送 ChangeCipherSpec 消息和 Finished 消息。Server 也会回应 ChangeCipherSpec 消息和 Finished 消息。如果 Finished 消息校验完成以后，代表握手最终成功。
+
+#### TLS关闭
+
+​		当页面关闭的时候，Server 会给 Client 发送 TLS Alert 消息，这条消息里面的描述就是 Close Notify。同时 Server 会发送 FIN 包开始 4 次挥手。在 TCP 4 次挥手之前，TLS 层会先收到 Close Notify 的 Alert 消息。
 
 ### http
-
-### https
 
 ## 设计模式
 
