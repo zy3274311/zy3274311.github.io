@@ -421,8 +421,6 @@ public void execute(ClientTransaction transaction) {
 
 ​		Activity调用attach时会向Window设置Callback接收事件，Window的Callback会被DecorView调用，将Event传递到Activity。ViewRootImpl通过InputQueue接收Event，并使用ViewPostImeInputStage调用DecorView的dispatchPointerEvent函数。
 
-![input_event_dispatcher](assets/input_event_dispatcher.jpeg)
-
 ```java
 final class ViewPreImeInputStage extends InputStage {
 
@@ -453,7 +451,9 @@ final class ViewPreImeInputStage extends InputStage {
 
 ```
 
-### View事件分发
+### 事件分发
+
+![input_event_dispatcher](assets/input_event_dispatcher.jpeg)
 
 ## 线程通信
 
