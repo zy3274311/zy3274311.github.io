@@ -298,6 +298,8 @@ public void execute(ClientTransaction transaction) {
 
   ViewRootImpl调用setView开始布局,mWindowSession对象是com.android.server.wmSession，addToDisplayAsUser函数会调用WMS的addWindow方法
 
+  performDraw会通过Surface的Canvas遍历绘制
+
   ```java
   public final class ViewRootImpl implements ... {
   		public void setView(View view, WindowManager.LayoutParams attrs, View panelParentView,
