@@ -91,11 +91,34 @@ public void execute(ClientTransaction transaction) {
 }
 ```
 
+## Activity窗口
 
+![4356742-fe125fcc03d76f48](assets/4356742-fe125fcc03d76f48.webp)
 
-* WMS
-* View绘制
-* View事件
+* Activity初始化
+
+  ```java
+  public final class ActivityThread extends ClientTransactionHandler implements ActivityThreadInternal {
+    	...
+  		private Activity performLaunchActivity(ActivityClientRecord r, Intent customIntent) {
+        	Activity activity = mInstrumentation.newActivity(cl, component.getClassName(), r.intent);
+        	...
+          Application app = r.packageInfo.makeApplication(false, mInstrumentation);
+        	...
+          Window window = r.mPendingRemoveWindow;//ActivityClientRecord r
+        	...
+          activity.attach(appContext, this, getInstrumentation(), r.token,
+                          r.ident, app, r.intent, r.activityInfo, title, r.parent,
+                          r.embeddedID, r.lastNonConfigurationInstances, config,
+                          r.referrer, r.voiceInteractor, window, r.configCallback,
+                          r.assistToken, r.shareableActivityToken);
+        	
+      }
+    	...
+  }
+  ```
+
+  
 
 ## 线程通信
 
