@@ -417,9 +417,11 @@ public void execute(ClientTransaction transaction) {
 
 ### 接收InputManagerService事件
 
-![20190914050249562](/Users/zhangying/Desktop/workspace/zy3274311.github.io/android/assets/20190914050249562.png)
+![20190914050249562](assets/20190914050249562.png)
 
 ​		Activity调用attach时会向Window设置Callback接收事件，Window的Callback会被DecorView调用，将Event传递到Activity。ViewRootImpl通过InputQueue接收Event，并使用ViewPostImeInputStage调用DecorView的dispatchPointerEvent函数。
+
+![input_event_dispatcher](assets/input_event_dispatcher.jpeg)
 
 ```java
 final class ViewPreImeInputStage extends InputStage {
