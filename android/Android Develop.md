@@ -818,11 +818,9 @@ public final class MessageQueue {
 ### Socket
 
 ## APK编译流程
-* Gradle
-* APK内部结构
-* 应用发布
+![b9154d8b825c99aeb99367d2c2823335](assets/b9154d8b825c99aeb99367d2c2823335.png)
 
-## 应用架构
+## 应用设计
 * MVVM
 * MVP
 * MVC
