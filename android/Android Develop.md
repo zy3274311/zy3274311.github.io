@@ -438,7 +438,15 @@ public final class MessageQueue {
 }
 ```
 
+### 同步屏障
 
+​		Handler发送的消息分为普通消息、屏障消息、异步消息，一旦Looper在处理消息时遇到屏障消息，那么就不再处理普通的消息，而仅仅处理异步的消息。不再使用屏障后，需要撤销屏障，不然就再也执行不到普通消息了。
+
+​		为什么需要这样？它是设计来为了让某些特殊的消息得以更快被执行的机制。比如绘制界面，这种消息可能会明显的被用户感知到，稍有不慎就会引起卡顿、掉帧之类的，所以需要及时处理（可能消息队列中有大量的消息，如果像平时一样挨个进行处理，那绘制界面这个消息就得等很久，这是不想看到的）。
+
+​		屏障消息仅仅是起一个屏障的作用，本身一般不附带其他东西，它需要配合其他Handler组件才能发挥作用。
+
+​		View绘制的起点是ViewRootImpl的requestLayout()开始的。这个方法会去执行三大绘制任务：onMeasure、onLayout、onDraw。调用requestLayout()方法之后，并不会马上开始进行绘制任务，而是会给主线程设置一个同步屏幕，并设置Vsync信号监听。当Vsync信号的到来，会发送一个异步消息到主线程Handler，执行我们上一步设置的绘制监听任务，并移除同步屏障。
 
 ## 进程通信
 
@@ -716,7 +724,7 @@ DexPathList(ClassLoader definingContext, String dexPath,
 ## 优化
 ### 线程优化
 * 通过合理控制线程能提升性能（Thread、Runable、Executors、HandlerThread、AsyncTask、ThreadPoolExecutor）
-  
+* 
 ### 包体积优化
 
 ### 内存管理
