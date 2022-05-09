@@ -415,11 +415,43 @@ public void execute(ClientTransaction transaction) {
 
 ## Activity事件
 
-### 屏幕事件
+### 接收InputManagerService事件
 
-### 布局
+![20190914050249562](/Users/zhangying/Desktop/workspace/zy3274311.github.io/android/assets/20190914050249562.png)
 
-### 绘制
+​		Activity调用attach时会向Window设置Callback接收事件，Window的Callback会被DecorView调用，将Event传递到Activity。ViewRootImpl通过InputQueue接收Event，并使用ViewPostImeInputStage调用DecorView的dispatchPointerEvent函数。
+
+```java
+final class ViewPreImeInputStage extends InputStage {
+
+    @Override
+    protected int onProcess(QueuedInputEvent q) {
+        if (q.mEvent instanceof KeyEvent) {
+          	return processKeyEvent(q);
+        } else {
+            final int source = q.mEvent.getSource();
+            if ((source & InputDevice.SOURCE_CLASS_POINTER) != 0) {
+              	return processPointerEvent(q);
+            } else if ((source & InputDevice.SOURCE_CLASS_TRACKBALL) != 0) {
+              	return processTrackballEvent(q);
+            } else {
+              	return processGenericMotionEvent(q);
+            }
+        }
+    }
+
+    private int processPointerEvent(QueuedInputEvent q) {
+        final MotionEvent event = (MotionEvent)q.mEvent;
+      	...
+        boolean handled = mView.dispatchPointerEvent(event);
+      	...
+        return handled ? FINISH_HANDLED : FORWARD;
+    }
+}
+
+```
+
+### View事件分发
 
 ## 线程通信
 
