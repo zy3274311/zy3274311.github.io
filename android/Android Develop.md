@@ -95,7 +95,7 @@ public void execute(ClientTransaction transaction) {
 
 ![4356742-fe125fcc03d76f48](assets/4356742-fe125fcc03d76f48.webp)
 
-* Activity初始化
+* Activity初始化过程
 
   ```java
   public final class ActivityThread extends ClientTransactionHandler implements ActivityThreadInternal {
@@ -129,7 +129,7 @@ public void execute(ClientTransaction transaction) {
   }
   ```
 
-* Activity的attach过程
+* Activity创建Window及setContentView过程
 
   ```java
   public class Activity extends ContextThemeWrapper implements ... {
@@ -149,10 +149,201 @@ public void execute(ClientTransaction transaction) {
           ...
       }
       ...
+          public void setContentView(@LayoutRes int layoutResID) {
+          getWindow().setContentView(layoutResID);
+          initWindowDecorActionBar();
+      }
+  		...
+      public void setContentView(View view) {
+          getWindow().setContentView(view);
+          initWindowDecorActionBar();
+      }
+  
+      public void setContentView(View view, ViewGroup.LayoutParams params) {
+          getWindow().setContentView(view, params);
+          initWindowDecorActionBar();
+      }
+  }
+  ```
+
+* PhoneWindow的setContentView流程
+
+  ```java
+  @Override
+  public void setContentView(int layoutResID) {
+  
+      if (mContentParent == null) {
+        	installDecor();//创建DecorView
+      } else if (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+        	mContentParent.removeAllViews();
+      }
+  
+      if (hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+          final Scene newScene = Scene.getSceneForLayout(mContentParent, layoutResID,
+                                                         getContext());
+          transitionTo(newScene);
+      } else {
+        	mLayoutInflater.inflate(layoutResID, mContentParent);
+      }
+    	...
+  }
+  
+  @Override
+  public void setContentView(View view) {
+    setContentView(view, new ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT));
+  }
+  
+  @Override
+  public void setContentView(View view, ViewGroup.LayoutParams params) {
+      if (mContentParent == null) {
+        	installDecor();//创建DecorView
+      } else if (!hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+        	mContentParent.removeAllViews();
+      }
+  
+      if (hasFeature(FEATURE_CONTENT_TRANSITIONS)) {
+          view.setLayoutParams(params);
+          final Scene newScene = new Scene(mContentParent, view);
+          transitionTo(newScene);
+      } else {
+        	mContentParent.addView(view, params);
+      }
+    	...
+  }
+  ```
+
+* Activity的resume流程
+
+  WindowManager调用addView后会初始化ViewRootImpl
+
+  ```java
+  public final class ActivityThread extends ClientTransactionHandler implements ActivityThreadInternal {
+  		    @Override
+      public void handleResumeActivity(ActivityClientRecord r, boolean finalStateRequest,
+              boolean isForward, String reason) {
+        	...
+          // TODO Push resumeArgs into the activity for consideration
+          // skip below steps for double-resume and r.mFinish = true case.
+          if (!performResumeActivity(r, finalStateRequest, reason)) {
+              return;
+          }
+        	...
+          final Activity a = r.activity;
+  				...
+          if (r.window == null && !a.mFinished && willBeVisible) {
+              r.window = r.activity.getWindow();
+              View decor = r.window.getDecorView();
+              decor.setVisibility(View.INVISIBLE);
+              ViewManager wm = a.getWindowManager();
+              WindowManager.LayoutParams l = r.window.getAttributes();
+              a.mDecor = decor;
+              l.type = WindowManager.LayoutParams.TYPE_BASE_APPLICATION;
+              l.softInputMode |= forwardBit;
+              if (a.mVisibleFromClient) {
+                  if (!a.mWindowAdded) {
+                      a.mWindowAdded = true;
+                      wm.addView(decor, l);
+                  } else {
+                      a.onWindowAttributesChanged(l);
+                  }
+              }
+            	...
+          } else if (!willBeVisible) {
+              ...
+              r.hideForNow = true;
+          }
+        	...
+  
+          // The window is now visible if it has been added, we are not
+          // simply finishing, and we are not starting another activity.
+          if (!r.activity.mFinished && willBeVisible && r.activity.mDecor != null && !r.hideForNow) {
+            	...
+              ViewRootImpl impl = r.window.getDecorView().getImpl();
+              WindowManager.LayoutParams l = impl != null
+                      ? impl.mWindowAttributes : r.window.getAttributes();
+              if ((l.softInputMode
+                      & WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION)
+                      != forwardBit) {
+  
+                	...
+                  if (r.activity.mVisibleFromClient) {
+                      ViewManager wm = a.getWindowManager();
+                      View decor = r.window.getDecorView();
+                      wm.updateViewLayout(decor, l);
+                  }
+              }
+            	...
+              if (r.activity.mVisibleFromClient) {
+                  r.activity.makeVisible();
+              }
+          }
+  
+          r.nextIdle = mNewActivities;
+          mNewActivities = r;
+          Looper.myQueue().addIdleHandler(new Idler());
+      }
+  }
+  
+  public class Activity extends ContextThemeWrapper implements ... {
+      void makeVisible() {
+          if (!mWindowAdded) {
+              ViewManager wm = getWindowManager();
+              wm.addView(mDecor, getWindow().getAttributes());
+              mWindowAdded = true;
+          }
+          mDecor.setVisibility(View.VISIBLE);
+      }
+  }
+  ```
+
+  ViewRootImpl调用setView开始布局及绘制
+
+  ```java
+  public final class ViewRootImpl implements ... {
+  		public void setView(View view, WindowManager.LayoutParams attrs, View panelParentView,
+              int userId) {
+          synchronized (this) {
+              if (mView == null) {
+                  mView = view;
+                	...
+                  // Schedule the first layout -before- adding to the window
+                  // manager, to make sure we do the relayout before receiving
+                  // any other events from the system.
+                  requestLayout();//开始布局
+                	...
+                  try {
+                    	...
+                      //开始绘制
+                      res = mWindowSession.addToDisplayAsUser(mWindow, mWindowAttributes,
+                              getHostVisibility(), mDisplay.getDisplayId(), userId,
+                              mInsetsController.getRequestedVisibility(), inputChannel, mTempInsets,
+                              mTempControls);
+                      if (mTranslator != null) {
+                          mTranslator.translateInsetsStateInScreenToAppWindow(mTempInsets);
+                          mTranslator.translateSourceControlsInScreenToAppWindow(mTempControls);
+                      }
+                  } catch (RemoteException e) {
+                    	...
+                      throw new RuntimeException("Adding window failed", e);
+                  } finally {
+                    	...
+                  }
+                	...
+              }
+          }
+      }
   }
   ```
 
   
+
+## Activity事件
+
+### 屏幕事件
+
+### 布局
+
+### 绘制
 
 ## 线程通信
 
