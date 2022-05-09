@@ -112,9 +112,43 @@ public void execute(ClientTransaction transaction) {
                           r.embeddedID, r.lastNonConfigurationInstances, config,
                           r.referrer, r.voiceInteractor, window, r.configCallback,
                           r.assistToken, r.shareableActivityToken);
-        	
+        	...
+          if (r.isPersistable()) {
+              mInstrumentation.callActivityOnCreate(activity, r.state, r.persistentState);
+          } else {
+              mInstrumentation.callActivityOnCreate(activity, r.state);
+          }
+        	...
+        	r.activity = activity;
+        	...
+          r.setState(ON_CREATE);
+        	...
+          return activity;
       }
     	...
+  }
+  ```
+
+* Activity的attach过程
+
+  ```java
+  public class Activity extends ContextThemeWrapper implements ... {
+          ...
+          final void attach(Context context, ActivityThread aThread,...) {
+          attachBaseContext(context);
+          mWindow = new PhoneWindow(this, window, activityConfigCallback);
+  				...
+          mWindow.setWindowManager(
+                  (WindowManager)context.getSystemService(Context.WINDOW_SERVICE),
+                  mToken, mComponent.flattenToString(),
+                  (info.flags & ActivityInfo.FLAG_HARDWARE_ACCELERATED) != 0);
+          if (mParent != null) {
+              mWindow.setContainer(mParent.getWindow());
+          }
+          mWindowManager = mWindow.getWindowManager();
+          ...
+      }
+      ...
   }
   ```
 
