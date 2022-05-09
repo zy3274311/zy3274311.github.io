@@ -296,7 +296,7 @@ public void execute(ClientTransaction transaction) {
   }
   ```
 
-  ViewRootImpl调用setView开始布局及绘制
+  ViewRootImpl调用setView开始布局,mWindowSession对象是com.android.server.wmSession，addToDisplayAsUser函数会调用WMS的addWindow方法
 
   ```java
   public final class ViewRootImpl implements ... {
@@ -309,19 +309,16 @@ public void execute(ClientTransaction transaction) {
                   // Schedule the first layout -before- adding to the window
                   // manager, to make sure we do the relayout before receiving
                   // any other events from the system.
-                  requestLayout();//开始布局
+                  requestLayout();//开始布局及绘制
                 	...
                   try {
                     	...
-                      //开始绘制
+                      //内部会执行WMS的addWindow函数
                       res = mWindowSession.addToDisplayAsUser(mWindow, mWindowAttributes,
                               getHostVisibility(), mDisplay.getDisplayId(), userId,
                               mInsetsController.getRequestedVisibility(), inputChannel, mTempInsets,
                               mTempControls);
-                      if (mTranslator != null) {
-                          mTranslator.translateInsetsStateInScreenToAppWindow(mTempInsets);
-                          mTranslator.translateSourceControlsInScreenToAppWindow(mTempControls);
-                      }
+                    	...
                   } catch (RemoteException e) {
                     	...
                       throw new RuntimeException("Adding window failed", e);
@@ -331,6 +328,83 @@ public void execute(ClientTransaction transaction) {
                 	...
               }
           }
+      }
+    
+      @Override
+      public void requestLayout() {
+          if (!mHandlingLayoutInLayoutRequest) {
+              checkThread();
+              mLayoutRequested = true;
+              scheduleTraversals();
+          }
+      }
+    
+      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
+      void scheduleTraversals() {
+          if (!mTraversalScheduled) {
+              mTraversalScheduled = true;
+              mTraversalBarrier = mHandler.getLooper().getQueue().postSyncBarrier();//发送同步障碍消息
+              mChoreographer.postCallback(
+                      Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, null);
+              notifyRendererOfFramePending();
+              pokeDrawLockIfNeeded();
+          }
+      }
+  
+      void unscheduleTraversals() {
+          if (mTraversalScheduled) {
+              mTraversalScheduled = false;
+              mHandler.getLooper().getQueue().removeSyncBarrier(mTraversalBarrier);//移除同步障碍消息
+              mChoreographer.removeCallbacks(
+                      Choreographer.CALLBACK_TRAVERSAL, mTraversalRunnable, null);
+          }
+      }
+    
+    	
+      private void performTraversals() {
+          ...
+          if (mFirst || windowShouldResize || viewVisibilityChanged || params != null
+                  || mForceNextWindowRelayout) {
+  						...
+              if (!mStopped || wasReportNextDraw) {
+                	...
+                  if (focusChangedDueToTouchMode || mWidth != host.getMeasuredWidth()
+                          || mHeight != host.getMeasuredHeight() || dispatchApplyInsets ||
+                          updatedConfiguration) {
+                    	...
+                      performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
+  										...
+                      if (measureAgain) {
+                        	...
+                          performMeasure(childWidthMeasureSpec, childHeightMeasureSpec);
+                      }
+                    	...
+                  }
+              }
+          } else {
+            	...
+          }
+  
+          final boolean didLayout = layoutRequested && (!mStopped || wasReportNextDraw);
+        	...
+          if (didLayout) {
+              performLayout(lp, mWidth, mHeight);
+  						...
+          }
+        	...
+          boolean cancelDraw = mAttachInfo.mTreeObserver.dispatchOnPreDraw() || !isViewVisible;
+          if (!cancelDraw) {
+            	...
+              performDraw();
+          } else {
+              if (isViewVisible) {
+                  // Try again
+                  scheduleTraversals();
+              } else {
+                	...
+              }
+          }
+        	...
       }
   }
   ```
