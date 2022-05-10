@@ -8,11 +8,11 @@
 
 ## mp4
 
-## ![1651938225569](/Users/zhangying/Desktop/workspace/zy3274311.github.io/media/assets/1651938225569.jpg)
+## ![1651938225569](assets/1651938225569.jpg)
 
 ## H264
 
-![1651937252099](/Users/zhangying/Desktop/workspace/zy3274311.github.io/media/assets/1651937252099.jpg)
+![1651937252099](assets/1651937252099.jpg)
 
 ## FFmpeg
 
