@@ -1078,7 +1078,14 @@ DexPathList(ClassLoader definingContext, String dexPath,
 
 ### 热修复
 
+- Tinker：https://github.com/Tencent/tinker
+- sophix：https://help.aliyun.com/document_detail/51414.html
+
 ### 插件化
+
+- RePlugin：https://github.com/Qihoo360/RePlugin
+- Shadow：https://github.com/Tencent/Shadow
+- Atlas：https://alibaba.github.io/atlas/index.html?spm=a2c6h.12873639.article-detail.3.317b183e2R4Fh0
 
 ## 优化
 
