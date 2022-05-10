@@ -415,7 +415,7 @@ public void execute(ClientTransaction transaction) {
 
 ## Activity事件
 
-### 接收InputManagerService事件
+### 接收系统事件
 
 ![20190914050249562](assets/20190914050249562.png)
 
@@ -818,6 +818,9 @@ public final class MessageQueue {
 ### Socket
 
 ## APK编译流程
+
+![build-process_2x](assets/build-process_2x.png)
+
 ![b9154d8b825c99aeb99367d2c2823335](assets/b9154d8b825c99aeb99367d2c2823335.png)
 
 ## 应用设计
@@ -1078,12 +1081,14 @@ DexPathList(ClassLoader definingContext, String dexPath,
 ### 插件化
 
 ## 优化
-### 线程优化
-* 通过合理控制线程能提升性能（Thread、Runable、Executors、HandlerThread、AsyncTask、ThreadPoolExecutor）
-* 
-### 包体积优化
 
-### 内存管理
+### 性能分析
+
+### 编译速度优化
+
+### 缩减应用体积
+
+### 内存优化
 * 内存泄漏问题（显示引用、隐示引用（内部类、匿名内部类））
   
 ### 电量优化
