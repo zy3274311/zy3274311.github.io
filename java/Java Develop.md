@@ -2,6 +2,46 @@
 
 ## 内存管理
 
+### 内存分区
+
+### 堆的新生代和老年代
+
+- https://zhuanlan.zhihu.com/p/111370230
+- https://zhuanlan.zhihu.com/p/43279292
+
+### GC Roots
+
+- Class 
+
+  由系统ClassLoader加载的类型对象
+
+- 静态变量
+- 常量
+
+- Thread 
+
+  激活状态的线程
+
+- Stack Local 
+
+  栈中的对象。每个线程都会分配一个栈，栈中的局部变量或者参数都是GC root，因为它们的引用随时可能被用到；
+
+- JNI Local
+
+  JNI中的局部变量和参数引用的对象；可能在JNI中定义的，也可能在虚拟机中定义
+
+- JNI Global
+
+  JNI中的全局变量引用的对象；同上
+
+- Monitor Used
+
+  用于保证同步的对象，例如wait()，notify()中使用的对象、锁等。
+
+- Held by JVM 
+
+  JVM持有的对象。JVM为了特殊用途保留的对象，它与JVM的具体实现有关。比如有System Class Loader, 一些Exceptions对象，和一些其它的Class Loader。对于这些类，JVM也没有过多的信息。
+
 ## 多线程与线程锁
 ### 线程
 

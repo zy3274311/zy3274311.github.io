@@ -1089,7 +1089,33 @@ DexPathList(ClassLoader definingContext, String dexPath,
 
 ## 优化
 
-### 性能分析
+### 性能监控
+
+- 核心监控指标
+  - 崩溃率
+  - ANR 发生率
+  - 唤醒次数过多
+  - 唤醒锁定被卡住
+- 其他监控指标
+  - 启动时间
+  - 后台wifi扫描次数
+  - 后台网络流量
+  - 屏幕刷新帧率
+  - 冻结帧
+  - 权限拒绝
+  - 运行时重要用户行为记录
+  - 运行时重要用户性能数据
+- 监控工具
+  - Android Vitals
+  - bugly
+  - youmeng
+  - 公司私有运行时日志平台
+  - Logcat
+  - Android studio profiler
+  - Systrace 命令行工具
+  - Perfetto 命令行工具
+
+### 性能优化
 
 ### 编译速度优化
 
@@ -1105,7 +1131,7 @@ DexPathList(ClassLoader definingContext, String dexPath,
 * native carsh
 * 卡顿
   
-### 调试
+### debug调试
 * Trace
 
 ## 第三方库及框架
