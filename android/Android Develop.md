@@ -810,6 +810,37 @@ public final class MessageQueue {
 
 ### 共享内存
 
+```c
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <sys/ioctl.h>
+#include <linux/ashmem.h>
+
+int fd = open("/dev/ashmem", O_RDWR);
+
+ioctl(fd, ASHMEM_SET_NAME, "memory");
+ioctl(fd, ASHMEM_SET_SIZE, 128);
+
+char *buffer = (char * ) mmap(NULL, 128, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+```
+
+```c
+int fd = ASharedMemory_create("memory", 128);
+
+// By default it has PROT_READ | PROT_WRITE | PROT_EXEC.
+size_t memSize = ASharedMemory_getSize(fd);
+char *buffer = (char *) mmap(NULL, memSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+strcpy(buffer, "This is an example."); // trivially initialize content
+
+// limit access to read only
+ASharedMemory_setProt(fd, PROT_READ);
+
+// share fd with another process here and the other process can only map with PROT_READ.
+```
+
+
+
 ### AIDL
 
 - aidl结构
@@ -1107,13 +1138,14 @@ DexPathList(ClassLoader definingContext, String dexPath,
   - 运行时重要用户性能数据
 - 监控工具
   - Android Vitals
-  - bugly
-  - youmeng
-  - 公司私有运行时日志平台
   - Logcat
   - Android studio profiler
   - Systrace 命令行工具
   - Perfetto 命令行工具
+  - bugly
+  - youmeng
+  - 公司私有运行时日志平台
+  - Leakcanary
 
 ### 性能优化
 
