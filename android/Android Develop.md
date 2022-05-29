@@ -455,6 +455,105 @@ final class ViewPreImeInputStage extends InputStage {
 
 ![input_event_dispatcher](assets/input_event_dispatcher.jpeg)
 
+### dispatchTouchEvent事件分发
+
+ViewGroup的事件分发
+
+```java
+@Override
+public boolean dispatchTouchEvent(MotionEvent ev) {
+  ……
+  //1、判断是否被当前ViewGroup拦截
+  final boolean intercepted;
+  if (actionMasked == MotionEvent.ACTION_DOWN || mFirstTouchTarget != null) {
+    final boolean disallowIntercept = (mGroupFlags & FLAG_DISALLOW_INTERCEPT) != 0;
+    //2、判断是否被child调用requestDisallowInterceptTouchEvent
+    if (!disallowIntercept) {
+      intercepted = onInterceptTouchEvent(ev);
+      ev.setAction(action); // restore action in case it was changed
+    } else {
+      intercepted = false;
+    }
+  } else {
+    // There are no touch targets and this action is not an initial down
+    // so this view group continues to intercept touches.
+    intercepted = true;
+  }
+  ……
+  if (!canceled && !intercepted) {
+    ……
+    for (int i = childrenCount - 1; i >= 0; i--) {
+      final int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+      final View child = getAndVerifyPreorderedView(preorderedList, children, childIndex);
+      ……
+      //3、判断是否被child消费
+      if (dispatchTransformedTouchEvent(ev, false, child, idBitsToAssign)) {
+        // Child wants to receive touch within its bounds.
+        ……
+        newTouchTarget = addTouchTarget(child, idBitsToAssign);
+        alreadyDispatchedToNewTouchTarget = true;
+        break;
+      }
+    }
+    ……
+    // Dispatch to touch targets.
+      if (mFirstTouchTarget == null) {
+        //4.1 无child消费，判断是否被当前ViewGroup消费此Event
+        // No touch targets so treat this as an ordinary view.
+        handled = dispatchTransformedTouchEvent(ev, canceled, null,
+                                                TouchTarget.ALL_POINTER_IDS);
+      } else {
+        //4.2 已经被消费，通过TouchTarget链表传递Event，调用Child函数dispatchTouchEvent
+        // Dispatch to touch targets, excluding the new touch target if we already
+        // dispatched to it.  Cancel touch targets if necessary.
+        TouchTarget predecessor = null;
+        TouchTarget target = mFirstTouchTarget;
+        while (target != null) {
+          final TouchTarget next = target.next;
+          if (alreadyDispatchedToNewTouchTarget && target == newTouchTarget) {
+            handled = true;
+          } else {
+            ……
+              if (dispatchTransformedTouchEvent(ev, cancelChild, target.child, target.pointerIdBits)) {
+                handled = true;
+              }
+            ……
+          }
+          ……
+        }
+      }
+  }
+  ……
+  return handled;
+}
+```
+
+View类的dispatchTouchEvent只分发onTouchEvent和OnTouchListener
+
+### View绘制
+
+View类的draw方法
+
+```java
+public void draw(Canvas canvas) {
+        /*
+         * Draw traversal performs several drawing steps which must be executed
+         * in the appropriate order:
+         *
+         *      1. Draw the background
+         *      2. If necessary, save the canvas' layers to prepare for fading
+         *      3. Draw view's content
+         *      4. Draw children
+         *      5. If necessary, draw the fading edges and restore layers
+         *      6. Draw decorations (scrollbars for instance)
+         *      7. If necessary, draw the default focus highlight
+         */
+         
+}
+```
+
+
+
 ## 线程通信
 
 ### HandlerThread
@@ -844,6 +943,27 @@ ASharedMemory_setProt(fd, PROT_READ);
 ### AIDL
 
 - aidl结构
+
+  ```java
+  public static abstract class Stub extends android.os.Binder implements XXXAidlInterface{
+  	public static XXXAidlInterface asInterface(android.os.IBinder obj){
+      return new Stub.Proxy(obj);
+    }
+    @Override 
+    public android.os.IBinder asBinder() {
+      return this;
+    }
+    
+    private static class Proxy implements io.github.zy3274311.ffmpegsample.IMyAidlInterface {     
+      private android.os.IBinder mRemote;
+      
+      Proxy(android.os.IBinder remote) {
+        mRemote = remote;
+      }
+    }
+  }
+  ```
+
 - 线程调用
 
 ### Socket
@@ -880,6 +1000,7 @@ ASharedMemory_setProt(fd, PROT_READ);
 ### NDK调试
 * Sampleperf
 * ndk-stack
+* add2line
 * adb logcat
 * trace
   
@@ -1123,19 +1244,61 @@ DexPathList(ClassLoader definingContext, String dexPath,
 ### 性能监控
 
 - 核心监控指标
-  - 崩溃率
-  - ANR 发生率
+  - 崩溃
+  
+    OOM需要排查内存泄漏或者大图片加载问题
+  
+    Logcat查看crash日志
+  
+    bugly等工具手机crash日志
+  
+  - ANR
+  
+    ```shell
+    adb shell pull data/data/anr
+    ```
+  
+    bugly等工具查看ANR
+  
   - 唤醒次数过多
+  
   - 唤醒锁定被卡住
+  
 - 其他监控指标
   - 启动时间
+  
+    通过命令行查看MainActivity启动时间
+  
+    ```shell
+    adb shell am start -W io.github.zy3274311.ffmpegsample/io.github.zy3274311.ffmpegsample.MainActivity
+    ```
+  
+    通过自定义log查看其他Activity启动时间细节
+  
   - 后台wifi扫描次数
+  
   - 后台网络流量
+  
   - 屏幕刷新帧率
+  
+    ChoreoGrapher添加onFrame回调
+  
+    命令行获取刷新帧率
+  
+    ```shell
+    adb shell dumpsys gfxinfo [PACKAGE_NAME]
+    ```
+  
+    使用Android Studio profile 查看Main Looper dispatchMessage运行情况
+  
   - 冻结帧
+  
   - 权限拒绝
+  
   - 运行时重要用户行为记录
+  
   - 运行时重要用户性能数据
+  
 - 监控工具
   - Android Vitals
   - Logcat

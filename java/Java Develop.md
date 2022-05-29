@@ -382,7 +382,7 @@
 
     Monitor是线程私有的数据结构，每一个线程都有一个可用monitor record列表，同时还有一个全局的可用列表。每一个被锁住的对象都会和一个monitor关联，同时monitor中有一个Owner字段存放拥有该锁的线程的唯一标识，表示该锁被这个线程占用。
 
-    现在话题回到synchronized，synchronized通过Monitor来实现线程同步，Monitor是依赖于底层的操作系统的Mutex Lock（互斥锁）来实现的线程同步。
+    synchronized通过Monitor来实现线程同步，Monitor是依赖于底层的操作系统的Mutex Lock（互斥锁）来实现的线程同步。
 
 * 无锁、偏向锁、轻量级锁、重量级锁
 
@@ -453,7 +453,7 @@
 * super对应kotlin中的关键字in
 * extend对应kotlin中的关键字out
 * ?的使用
-* 能否将固定格式强转位泛型格式
+* 能否将固定格式强转为泛型格式
 
 ## 序列化
 * Serializable
