@@ -542,8 +542,8 @@ public void draw(Canvas canvas) {
          *
          *      1. Draw the background
          *      2. If necessary, save the canvas' layers to prepare for fading
-         *      3. Draw view's content
-         *      4. Draw children
+         *      3. Draw view's content call onDraw()
+         *      4. Draw children call dispatchDraw()
          *      5. If necessary, draw the fading edges and restore layers
          *      6. Draw decorations (scrollbars for instance)
          *      7. If necessary, draw the default focus highlight
@@ -1260,6 +1260,8 @@ DexPathList(ClassLoader definingContext, String dexPath,
   
     bugly等工具查看ANR
   
+    BlockCanary
+  
   - 唤醒次数过多
   
   - 唤醒锁定被卡住
@@ -1312,7 +1314,21 @@ DexPathList(ClassLoader definingContext, String dexPath,
 
 ### 性能优化
 
+Activity启动时间
+
+帧率
+
+CPU
+
+内存
+
 ### 编译速度优化
+
+- 使用maven私服
+- gradle transform优化（debug模式下不启用transform）
+- 模块采用aar
+- dexBuilder增量编译
+- 支持增量注解处理(kapt\annotationProcesser)
 
 ### 缩减应用体积
 
