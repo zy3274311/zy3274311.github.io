@@ -1,0 +1,33 @@
+curl -O https://wos.58cdn.com.cn/YzWvUtSYzYc/publicvideo/与病对话_试读.mp4
+curl -O https://wos.58cdn.com.cn/YzWvUtSYzYc/publicvideo/世界观_视频新新.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/077912f6e77447168b2a8209f46fda6b.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/9f6050ddb4db4e6393a683a50124c003.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/58cf93cb26ec45b9b42b9e8db3901ac4.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/35a9811615944dc19319aed058092136.mp4
+
+curl -O https://wos.58cdn.com.cn/sTqPoNmLsXs/cover/1466616800715264000.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/35a9811615944dc19319aed058092136.mp4
+curl -O https://wos.58cdn.com.cn/BczYxWvUBgD/huangyepostvideo/8613478665990_1538118178000_芥末宣传视频2.mp4
+curl -O https://wos.58cdn.com.cn/sTqPoNmLsXs/vod/1153579683573456899.m3u8
+curl -O http://testv1.wos.58dns.org/UWvrQpOnMUvjW/cover/1466699742653194240.m3u8
+curl -O http://wos.58cdn.com.cn/fGdCbAZyXfO/video/0c2f0e6e-5a1c-4649-902a-73dd1b8aee6e.main.m3u8
+curl -O http://wos.58cdn.com.cn/fGdCbAZyXfO/video/big_buck_bunny.30fps.720P.m3u8
+
+curl -O https://wos.58cdn.com.cn/sTqPoNmLsXs/short/1271351942299303936.mp4
+curl -O http://9890.vod.myqcloud.com/9890_4e292f9a3dd011e6b4078980237cc3d3.f20.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/9f6050ddb4db4e6393a683a50124c003.mp4
+curl -O https://wos.58cdn.com.cn/WxUtSrQpWxD/toutiaolive/1306140285964701696.mp4
+
+curl -O https://wos2.58cdn.com.cn/DeFazYxWvDti/frsupload/3871b7be9fd76479430853ae5320611a_wechatsound.mp3
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/videotransform/75ec30e86f324b8fbdbadd091c6a05ba.m204.mp4
+curl -O http://testv1.wos.58dns.org/UWvrQpOnMUvjW/short/1306783607754350592.mp4
+curl -O https://wos.58cdn.com.cn/sTqPoNmLsXs/short/1073040424421081089.mp4
+curl -O https://wos.58cdn.com.cn/YzWvUtSYzYc/publicvideo/世界观_试读新新.mp4
+curl -O https://wos.58cdn.com.cn/YzWvUtSYzYc/publicvideo/36个问题让你45分钟建立亲密关系.mp4
+curl -O https://wos.58cdn.com.cn/YzWvUtSYzYc/publicvideo/达芬奇有多厉害？.mp4
+
+curl -O https://wos.58cdn.com.cn/RsPoNmLkRXw/zcmcompanyvideo/operationVideo.mp4
+curl -O https://wos.58cdn.com.cn/sTqPoNmLsXs/vod/1072757176033923072_10.mp4
+curl -O https://wos.58cdn.com.cn/gHeDcBazgLk/video/58cf93cb26ec45b9b42b9e8db3901ac4.mp4
+curl -O https://wos.58cdn.com.cn/sTqPoNmLsXs/vod/noaudio.mp4
+curl -O http://prod2.wos.58dns.org/FHDcBazYFJk/wvideochatonline58/only_audio.mp4
