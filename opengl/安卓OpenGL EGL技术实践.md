@@ -47,6 +47,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
 ### 创建EGLDisplay
 EGLDisplay是对实际显示设备的抽象
+
 ```        
 // Return an EGLDisplay, or die trying.
 private static EGLDisplay getEglDisplay() {
@@ -63,7 +64,9 @@ private static EGLDisplay getEglDisplay() {
     return eglDisplay;
 }
 ```
+
 ### 配置EGLConfig
+
 ```
 public static final int[] CONFIG_PLAIN = {
         EGL10.EGL_RED_SIZE, 8,
@@ -92,8 +95,10 @@ private static EGLConfig getEglConfig(EGLDisplay eglDisplay, int[] configAttribu
     return eglConfig;
 }
 ```
+
 ### 创建EGLContext
 EGLContext存储OpenGL ES绘图的一些状态信息
+
 ```
 // Return an EGLContext, or die trying.
 private static EGLContext createEglContext(
@@ -115,9 +120,11 @@ private static EGLContext createEglContext(
     return eglContext;
 }
 ```
+
 ### 创建EGLSurface
 EGLSurface用来存储图像的内存区域
 1. eglCreateWindowSurface：创建渲染到屏幕的渲染表面
+
 ```
 // Create EGLSurface from either Surface or SurfaceTexture.
 private void createSurfaceInternal(Object surface) {
@@ -136,7 +143,9 @@ private void createSurfaceInternal(Object surface) {
     }
 }
 ```
+
 2. eglCreatePbufferSurface：创建离屏的渲染表面
+
 ```
 public void createPbufferSurface(int width, int height) {
     checkIsNotReleased();
@@ -153,6 +162,7 @@ public void createPbufferSurface(int width, int height) {
 ```
     
 ### 绑定EGLSurface
+
 ```
 public void makeCurrent() {
     checkIsNotReleased();
@@ -167,7 +177,9 @@ public void makeCurrent() {
     }
 }
 ```
+
 ### 交换缓冲，进行显示
+
 ```
 public void swapBuffers(long timeStampNs) {
     checkIsNotReleased();
@@ -181,7 +193,9 @@ public void swapBuffers(long timeStampNs) {
     }
 }
 ```
+
 ### 释放资源
+
 ```
 public void releaseSurface() {
     if (eglSurface != EGL14.EGL_NO_SURFACE) {
