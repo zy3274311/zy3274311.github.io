@@ -37,7 +37,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glViewport(0, 0, width, height);
     }
 }
-    
 ```
 
 我们也可以封装自己的 EGL 环境。
