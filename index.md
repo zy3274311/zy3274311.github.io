@@ -36,12 +36,11 @@
 
 ### [Kotlin Develop](kotlin/Kotlin%20Develop)
 
-### [CC++ Develop](C:C++/CC++ Develop) 
+### [CC++ Develop](C:C++/CC++ Develop.md) 
 
-### [kotlin compose](kotlin compose/kotlin compose)
+### [kotlin compose](kotlin compose/kotlin compose.md)
 
-### [Flutter](flutter/Flutter Develop)
-
+### [Flutter](flutter/Flutter Develop.md)
 
 
 
