@@ -36,11 +36,13 @@
 
 ### [Kotlin Develop](kotlin/Kotlin%20Develop)
 
-### [CC++ Develop](C:C++/CC++ Develop.md) 
+### [CC++ Develop](C/C++/CC++ Develop.md) 
 
 ### [kotlin compose](kotlin compose/kotlin compose.md)
 
 ### [Flutter](flutter/Flutter Develop.md)
+
+### [Harmony](harmony/Harmony OS NEXT笔记.md)
 
 
 
